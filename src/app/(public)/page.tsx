@@ -1,7 +1,14 @@
+import HeroSection from "@/components/layouts/hero-section";
+import SearchSection from "@/components/layouts/search-section";
+
 export default function HomePage() {
   return (
     <main>
-      <h1>JemberKost</h1>
+
+      <HeroSection />
+
+      <SearchSection />
+
     </main>
   );
 }

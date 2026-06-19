@@ -1,6 +1,8 @@
-import { Database } from "./database";
+import type { User } from "@supabase/supabase-js";
+import type { Database, Tables } from "./database";
 
 export type UserRole = Database["public"]["Enums"]["user_role"];
+export type AuthProfile = Tables<"profiles">;
 
 export interface AuthUser {
   id: string;
@@ -25,10 +27,12 @@ export interface RegisterInput {
 }
 
 export interface AuthState {
-  user: AuthUser | null;
+  user: User | null;
+  profile: AuthProfile | null;
   loading: boolean;
 
-  setUser: (user: AuthUser | null) => void;
+  setUser: (user: User | null) => void;
+  setProfile: (profile: AuthProfile | null) => void;
   setLoading: (loading: boolean) => void;
-  clearUser: () => void;
+  clear: () => void;
 }

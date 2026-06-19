@@ -4,15 +4,16 @@ import { useAuthStore } from "@/store/auth-store";
 
 export function useAuth() {
   const user = useAuthStore((state) => state.user);
+  const profile = useAuthStore((state) => state.profile);
   const loading = useAuthStore((state) => state.loading);
-
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearUser = useAuthStore((state) => state.clearUser);
 
   return {
     user,
+    profile,
     loading,
-    setUser,
-    clearUser,
+    isAuthenticated: Boolean(user),
+    isAdmin: profile?.role === "admin",
+    isOwner: profile?.role === "owner",
+    isUser: profile?.role === "user",
   };
 }

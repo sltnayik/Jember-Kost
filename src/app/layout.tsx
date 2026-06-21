@@ -31,15 +31,17 @@ export default async function RootLayout({
   const profile = user ? await getCurrentProfile() : null;
 
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <AuthProvider initialUser={user} initialProfile={profile}>
-          <Navbar />
+    <html lang="id" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ThemeProvider>
+          <AuthProvider initialUser={user} initialProfile={profile}>
+            <Navbar />
 
-          <main className="flex-1">{children}</main>
+            <main className="flex-1">{children}</main>
 
-          <Footer />
-        </AuthProvider>
+            <Footer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

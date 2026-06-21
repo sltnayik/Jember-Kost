@@ -1,65 +1,65 @@
 import Link from "next/link";
+import { Mail, MessageCircle, Sparkles } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container mx-auto px-6 py-16">
-
-        <div className="grid md:grid-cols-4 gap-10">
-
-          <div>
-            <h2 className="font-bold text-2xl text-emerald-600">
+    <footer className="border-t border-border/70 bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-4 lg:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold text-foreground">
+              <span className="inline-flex size-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+                <Sparkles className="size-4" />
+              </span>
               JemberKost
-            </h2>
-
-            <p className="mt-4 text-sm text-muted-foreground">
-              Platform pencarian kos modern untuk mahasiswa dan masyarakat di Kabupaten Jember.
-            </p>
+            </Link>
+            <p className="max-w-sm text-sm leading-6 text-muted-foreground">Platform pencarian kos modern untuk mahasiswa dan masyarakat di Jember, dengan pengalaman yang bersih dan responsif.</p>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">
-              Navigasi
-            </h3>
-
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <Link href="/">Beranda</Link>
-              <br />
-              <Link href="/kost">Daftar Kos</Link>
-              <br />
-              <Link href="/map">Peta</Link>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">Menu</h3>
+            <div className="mt-4 grid gap-3 text-sm text-muted-foreground">
+              <Link href="/" className="transition-colors hover:text-foreground">
+                Beranda
+              </Link>
+              <Link href="/kost" className="transition-colors hover:text-foreground">
+                Cari Kos
+              </Link>
+              <Link href="/map" className="transition-colors hover:text-foreground">
+                Peta
+              </Link>
+              <Link href="/about" className="transition-colors hover:text-foreground">
+                Tentang
+              </Link>
             </div>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">
-              Informasi
-            </h3>
-
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <Link href="/about">Tentang</Link>
-              <br />
-              <Link href="/contact">Kontak</Link>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">Kontak</h3>
+            <div className="mt-4 grid gap-3 text-sm text-muted-foreground">
+              <a href="mailto:support@jemberkost.com" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                <Mail className="size-4" />
+                support@jemberkost.com
+              </a>
+              <a href="https://wa.me/6281234567890" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                <MessageCircle className="size-4" />
+                WhatsApp
+              </a>
             </div>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">
-              Kontak
-            </h3>
-
-            <div className="text-sm text-muted-foreground space-y-2">
-              <p>Jember, Jawa Timur</p>
-              <p>support@jemberkost.com</p>
-            </div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">JemberKost</h3>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">Pilih kos dengan tampilan yang rapi, informasi yang jelas, dan akses yang nyaman dari perangkat apa pun.</p>
           </div>
-
         </div>
 
-        <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-          © 2026 JemberKost. All rights reserved.
+        <div className="mt-12 border-t border-border/70 pt-6 text-sm text-muted-foreground">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 JemberKost. All rights reserved.</p>
+            <p>Dirancang untuk pengalaman modern di mobile dan desktop.</p>
+          </div>
         </div>
-
       </div>
     </footer>
   );

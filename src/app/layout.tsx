@@ -4,8 +4,10 @@ import "./globals.css";
 import AuthProvider from "@/providers/AuthProvider";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { getCurrentProfile, getCurrentUser } from "@/services/auth";
+import "leaflet/dist/leaflet.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +42,7 @@ export default async function RootLayout({
             <main className="flex-1">{children}</main>
 
             <Footer />
+            <Toaster richColors closeButton position="top-right" />
           </AuthProvider>
         </ThemeProvider>
       </body>

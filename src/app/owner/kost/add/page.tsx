@@ -1,10 +1,15 @@
+import KostForm from "@/components/forms/kost-form";
+
 export default function AddKostPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold text-[#0F172A]">Tambah Kos</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Lengkapi data properti kos sebelum diajukan untuk verifikasi.
-      </p>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="space-y-2">
+        <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#16A34A]">Owner</p>
+        <h1 className="text-3xl font-semibold text-[#0F172A]">Tambah Kos</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">Isi detail kos dengan lengkap dan pilih lokasi di peta agar calon penghuni bisa menemukan properti Anda dengan mudah.</p>
+      </div>
+
+      <KostForm />
     </main>
   );
 }

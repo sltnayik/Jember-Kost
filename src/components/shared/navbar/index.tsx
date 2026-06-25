@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, LogIn, LogOut, MapPinned, Menu, Search, Sparkles, UserPlus, UserRound } from "lucide-react";
+import { LayoutDashboard, LogIn, LogOut, MapPinned, Menu, Sparkles, UserPlus, UserRound } from "lucide-react";
 
 import { logout } from "@/actions/auth/logout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

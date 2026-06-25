@@ -1,5 +1,12 @@
 import type { User } from "@supabase/supabase-js";
+import type { z } from "zod";
 import type { Database, Tables } from "./database";
+import type {
+  emailSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "@/validations/auth";
 
 export type UserRole = Database["public"]["Enums"]["user_role"];
 export type AuthProfile = Tables<"profiles">;
@@ -14,17 +21,15 @@ export interface AuthUser {
   is_active: boolean;
 }
 
-export interface LoginInput {
-  email: string;
-  password: string;
-}
+export type LoginInput = z.infer<typeof loginSchema>;
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type EmailInput = z.infer<typeof emailSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
-export interface RegisterInput {
-  full_name: string;
-  email: string;
-  password: string;
-  role: Exclude<UserRole, "admin">;
-}
+export type AuthActionResult = {
+  error?: string;
+  success?: string;
+};
 
 export interface AuthState {
   user: User | null;

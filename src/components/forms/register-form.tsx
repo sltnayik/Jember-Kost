@@ -5,25 +5,13 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { register } from "@/actions/auth/register";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { RegisterInput } from "@/types/auth";
 import { registerSchema } from "@/validations/auth";
 
@@ -35,7 +23,9 @@ export function RegisterForm() {
     defaultValues: {
       full_name: "",
       email: "",
+      phone: "",
       password: "",
+      confirmPassword: "",
       role: "user",
     },
   });
@@ -46,6 +36,7 @@ export function RegisterForm() {
 
     if (result?.error) {
       setServerError(result.error);
+      toast.error(result.error);
     }
   }
 
@@ -81,12 +72,21 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="nama@email.com"
-                  autoComplete="email"
-                  {...field}
-                />
+                <Input type="email" placeholder="nama@email.com" autoComplete="email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nomor WhatsApp</FormLabel>
+              <FormControl>
+                <Input placeholder="081234567890" autoComplete="tel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -100,12 +100,21 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Minimal 6 karakter"
-                  autoComplete="new-password"
-                  {...field}
-                />
+                <Input type="password" placeholder="Minimal 8 karakter" autoComplete="new-password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Konfirmasi Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="Ulangi password" autoComplete="new-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -134,13 +143,9 @@ export function RegisterForm() {
           )}
         />
 
-        <Button
-          type="submit"
-          className="h-11 rounded-xl bg-[#16A34A] text-white hover:bg-[#15803D]"
-          disabled={isSubmitting}
-        >
+        <Button type="submit" className="h-11 rounded-xl bg-[#16A34A] text-white hover:bg-[#15803D]" disabled={isSubmitting}>
           {isSubmitting ? <Loader2 className="animate-spin" /> : null}
-          Daftar
+          {isSubmitting ? "Membuat akun..." : "Daftar"}
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">

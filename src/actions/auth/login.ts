@@ -1,13 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { LoginInput, UserRole } from "@/types/auth";
+import type { AuthActionResult, LoginInput, UserRole } from "@/types/auth";
 import { loginSchema } from "@/validations/auth";
 import { redirect } from "next/navigation";
-
-type LoginActionResult = {
-  error?: string;
-};
 
 const dashboardByRole: Record<UserRole, string> = {
   admin: "/admin",
@@ -19,7 +15,20 @@ function isUserRole(role: unknown): role is UserRole {
   return role === "admin" || role === "owner" || role === "user";
 }
 
-export async function login(input: LoginInput): Promise<LoginActionResult> {
+function getFriendlyLoginError(message: string | undefined) {
+  const normalizedMessage = message?.toLowerCase() ?? "";
+
+  if (
+    normalizedMessage.includes("email not confirmed") ||
+    normalizedMessage.includes("not confirmed")
+  ) {
+    return "Email Anda belum diverifikasi. Silakan cek inbox atau folder spam.";
+  }
+
+  return "Login gagal. Periksa email dan password Anda.";
+}
+
+export async function login(input: LoginInput): Promise<AuthActionResult> {
   const parsed = loginSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -31,15 +40,14 @@ export async function login(input: LoginInput): Promise<LoginActionResult> {
   const { email, password } = parsed.data;
   const supabase = await createClient();
 
-  const { data, error } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error || !data.user) {
     return {
-      error: error?.message ?? "Login gagal. Periksa email dan password.",
+      error: getFriendlyLoginError(error?.message),
     };
   }
 
@@ -58,6 +66,11 @@ export async function login(input: LoginInput): Promise<LoginActionResult> {
       error: "Profil pengguna tidak ditemukan.",
     };
   }
+
+  await supabase
+    .from("profiles")
+    .update({ last_login_at: new Date().toISOString() })
+    .eq("id", data.user.id);
 
   redirect(dashboardByRole[role]);
 }

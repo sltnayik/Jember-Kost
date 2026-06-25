@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { login } from "@/actions/auth/login";
+
+import { resendVerificationEmail } from "@/actions/auth/resend-verification";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,27 +19,36 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { LoginInput } from "@/types/auth";
-import { loginSchema } from "@/validations/auth";
+import type { EmailInput } from "@/types/auth";
+import { emailSchema } from "@/validations/auth";
 
-export function LoginForm() {
+export function ResendVerificationForm() {
+  const [message, setMessage] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const form = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<EmailInput>({
+    resolver: zodResolver(emailSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  async function onSubmit(values: LoginInput) {
+  async function onSubmit(values: EmailInput) {
+    setMessage(null);
     setServerError(null);
-    const result = await login(values);
 
-    if (result?.error) {
+    const result = await resendVerificationEmail(values);
+
+    if (result.error) {
       setServerError(result.error);
       toast.error(result.error);
+      return;
+    }
+
+    if (result.success) {
+      setMessage(result.success);
+      toast.success(result.success);
+      form.reset();
     }
   }
 
@@ -53,17 +63,24 @@ export function LoginForm() {
           </Alert>
         ) : null}
 
+        {message ? (
+          <Alert>
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        ) : null}
+
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email akun</FormLabel>
               <FormControl>
                 <Input
                   type="email"
                   placeholder="nama@email.com"
                   autoComplete="email"
+                  disabled={isSubmitting}
                   {...field}
                 />
               </FormControl>
@@ -72,58 +89,19 @@ export function LoginForm() {
           )}
         />
 
-        <div className="grid gap-2">
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between gap-3">
-                  <FormLabel>Password</FormLabel>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="text-xs font-medium text-[#16A34A] hover:underline"
-                  >
-                    Lupa password?
-                  </Link>
-                </div>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Masukkan password"
-                    autoComplete="current-password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
         <Button
           type="submit"
           className="h-11 rounded-xl bg-[#16A34A] text-white hover:bg-[#15803D]"
           disabled={isSubmitting}
         >
           {isSubmitting ? <Loader2 className="animate-spin" /> : null}
-          {isSubmitting ? "Memproses..." : "Login"}
+          {isSubmitting ? "Mengirim..." : "Kirim ulang email"}
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground">
-          Belum menerima email verifikasi?{" "}
-          <Link
-            href="/auth/resend-verification"
-            className="font-medium text-[#16A34A] hover:underline"
-          >
-            Kirim ulang
-          </Link>
-        </p>
-
         <p className="text-center text-sm text-muted-foreground">
-          Belum punya akun?{" "}
-          <Link href="/auth/register" className="font-medium text-[#16A34A]">
-            Daftar
+          Sudah diverifikasi?{" "}
+          <Link href="/auth/login" className="font-medium text-[#16A34A]">
+            Login
           </Link>
         </p>
       </form>

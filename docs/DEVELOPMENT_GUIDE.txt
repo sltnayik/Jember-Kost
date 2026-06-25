@@ -1,0 +1,773 @@
+# JEMBERKOST_DEVELOPMENT_GUIDE.md
+
+## 1. Tujuan Dokumen
+
+Dokumen ini berfungsi sebagai pedoman teknis pengembangan website JemberKost agar seluruh kode yang dibuat memiliki struktur yang konsisten, mudah dipelihara, scalable, dan mengikuti best practice modern untuk Next.js dan Supabase.
+
+Dokumen ini harus menjadi acuan utama saat menggunakan AI seperti Gemini, ChatGPT, Copilot, atau saat melakukan pengembangan secara manual.
+
+---
+
+# 2. Tech Stack Final
+
+## Frontend
+
+* Next.js 15 (App Router)
+* TypeScript
+* Tailwind CSS
+* Shadcn UI
+* Lucide React
+* next-themes (Dark Mode)
+
+## Backend
+
+* Supabase PostgreSQL
+* Supabase Auth
+* Supabase Storage
+
+## Form & Validation
+
+* React Hook Form
+* Zod
+
+## Data Fetching
+
+* TanStack Query
+
+## Maps
+
+* Leaflet
+* OpenStreetMap
+
+## Deployment
+
+* Vercel
+
+## Version Control
+
+* Git
+* GitHub
+
+---
+
+# 3. Development Principles
+
+## Clean Architecture
+
+Kode harus dipisahkan berdasarkan tanggung jawab:
+
+### UI Layer
+
+```text
+components/
+```
+
+Berisi komponen visual.
+
+### Feature Layer
+
+```text
+features/
+```
+
+Berisi business logic.
+
+### Service Layer
+
+```text
+services/
+```
+
+Berisi komunikasi dengan Supabase.
+
+### Data Layer
+
+```text
+supabase
+database
+storage
+```
+
+## Separation of Concerns
+
+Jangan mencampur:
+
+* UI
+* Business Logic
+* Database Query
+
+dalam satu file.
+
+---
+
+# 4. Folder Structure
+
+```text
+src
+│
+├── app
+├── components
+├── features
+├── services
+├── providers
+├── hooks
+├── types
+├── lib
+└── middleware.ts
+```
+
+---
+
+# 5. App Router Structure
+
+```text
+app
+│
+├── (public)
+│
+├── auth
+│   ├── login
+│   └── register
+│
+├── dashboard
+│
+├── owner
+│
+├── admin
+│
+└── api
+```
+
+---
+
+# 6. Naming Convention
+
+## Folder
+
+Gunakan:
+
+```text
+kebab-case
+```
+
+Contoh:
+
+```text
+kost-card
+review-card
+owner-sidebar
+```
+
+## File
+
+Gunakan:
+
+```text
+kebab-case
+```
+
+Contoh:
+
+```text
+kost-card.tsx
+owner-sidebar.tsx
+```
+
+## Component
+
+Gunakan:
+
+```tsx
+export function KostCard() {}
+```
+
+(PascalCase)
+
+## Interface
+
+```tsx
+interface KostCardProps {}
+```
+
+## Type
+
+```tsx
+type UserRole = "user" | "owner" | "admin";
+```
+
+## Constants
+
+Gunakan:
+
+```tsx
+MAX_IMAGE_SIZE
+DEFAULT_PAGE_SIZE
+```
+
+(UPPER_SNAKE_CASE)
+
+---
+
+# 7. TypeScript Rules
+
+## Wajib Menggunakan TypeScript
+
+Hindari penggunaan:
+
+```tsx
+any
+```
+
+kecuali benar-benar diperlukan.
+
+## Gunakan Type
+
+```tsx
+type UserRole = "user" | "owner" | "admin";
+```
+
+untuk Union Type.
+
+## Gunakan Interface
+
+```tsx
+interface UserProfile {}
+```
+
+untuk Object Shape.
+
+---
+
+# 8. Component Rules
+
+## Reusable Components
+
+Simpan di:
+
+```text
+components/ui
+```
+
+Contoh:
+
+* Button
+* Input
+* Badge
+* Card
+* Dialog
+
+## Shared Components
+
+Simpan di:
+
+```text
+components/shared
+```
+
+Contoh:
+
+* Navbar
+* Footer
+* Pagination
+
+## Feature Components
+
+Simpan di:
+
+```text
+features/kost
+features/review
+features/auth
+```
+
+---
+
+# 9. Server Components & Client Components
+
+## Default
+
+Gunakan Server Component.
+
+## Gunakan "use client" hanya jika:
+
+* useState
+* useEffect
+* Event Handler
+* Browser API
+
+dibutuhkan.
+
+## Hindari
+
+Menjadikan seluruh halaman sebagai Client Component.
+
+---
+
+# 10. State Management Rules
+
+## Server State
+
+Gunakan:
+
+```text
+TanStack Query
+```
+
+## UI State
+
+Gunakan:
+
+```tsx
+useState
+```
+
+## Jangan Gunakan
+
+* Redux
+* MobX
+
+Karena terlalu kompleks untuk kebutuhan proyek.
+
+---
+
+# 11. Supabase Rules
+
+## Semua Query Harus Melalui Service Layer
+
+Contoh:
+
+```text
+services/kost.service.ts
+```
+
+## Jangan Query Langsung di Component
+
+Hindari:
+
+```tsx
+const { data } = await supabase...
+```
+
+langsung di halaman.
+
+## Gunakan Pattern
+
+```text
+page
+↓
+service
+↓
+supabase
+```
+
+---
+
+# 12. Authentication Rules
+
+Role:
+
+```text
+guest
+user
+owner
+admin
+```
+
+## Guest
+
+Akses:
+
+* /
+* /kost
+* /kost/[slug]
+* /about
+* /contact
+
+## User
+
+Akses:
+
+* /dashboard
+
+## Owner
+
+Akses:
+
+* /owner
+
+## Admin
+
+Akses:
+
+* /admin
+
+---
+
+# 13. Middleware Rules
+
+### Guest
+
+Tidak dibatasi.
+
+### User
+
+Harus login.
+
+### Owner
+
+Harus login dan role owner.
+
+### Admin
+
+Harus login dan role admin.
+
+---
+
+# 14. Database Rules
+
+Gunakan UUID sebagai Primary Key.
+
+Semua tabel wajib memiliki:
+
+```sql
+created_at
+updated_at
+```
+
+kecuali tabel pivot.
+
+Gunakan Foreign Key untuk seluruh relasi.
+
+---
+
+# 15. Form Validation Rules
+
+Semua form wajib menggunakan:
+
+```text
+React Hook Form
++
+Zod
+```
+
+Form yang wajib divalidasi:
+
+* Login
+* Register
+* Tambah Kos
+* Edit Kos
+* Profil
+* Review
+
+---
+
+# 16. Storage Rules
+
+## Bucket
+
+### kost-images
+
+Menyimpan:
+
+* Foto kos
+* Foto kamar
+* Foto fasilitas
+
+### avatars
+
+Menyimpan:
+
+* Foto profil pengguna
+
+## Format File
+
+* jpg
+* jpeg
+* png
+* webp
+
+## Maksimal Ukuran
+
+5 MB
+
+---
+
+# 17. Image Rules
+
+Gunakan:
+
+```tsx
+next/image
+```
+
+untuk seluruh gambar.
+
+Thumbnail wajib tersedia untuk:
+
+* Daftar Kos
+* Favorit
+* Dashboard
+
+---
+
+# 18. Maps Rules
+
+Gunakan:
+
+* Leaflet
+* OpenStreetMap
+
+Tampilkan:
+
+* Marker lokasi kos
+* Popup informasi singkat kos
+
+---
+
+# 19. UI/UX Rules
+
+## Design Style
+
+Modern SaaS + Airbnb Inspired
+
+## Color Palette
+
+### Primary
+
+```text
+#16A34A
+```
+
+### Secondary
+
+```text
+#0F172A
+```
+
+### Accent
+
+```text
+#F59E0B
+```
+
+## Border Radius
+
+```text
+rounded-2xl
+```
+
+## Shadow
+
+```text
+shadow-md
+shadow-lg
+```
+
+## Font
+
+```text
+Inter
+```
+
+---
+
+# 20. Dark Mode Rules
+
+Menggunakan:
+
+```text
+next-themes
+```
+
+Wajib mendukung:
+
+* Light Mode
+* Dark Mode
+
+Semua komponen harus kompatibel dengan kedua mode.
+
+---
+
+# 21. Error Handling Rules
+
+Gunakan:
+
+```tsx
+try/catch
+```
+
+untuk seluruh operasi database.
+
+Gunakan Toast Notification untuk:
+
+* Success
+* Error
+* Warning
+
+---
+
+# 22. Security Rules
+
+## Jangan Pernah
+
+Menyimpan:
+
+* Service Role Key
+* Secret Key
+
+di frontend.
+
+## Gunakan
+
+```text
+Row Level Security (RLS)
+```
+
+pada seluruh tabel Supabase.
+
+## Owner
+
+Hanya boleh mengelola kos miliknya sendiri.
+
+## User
+
+Hanya boleh mengubah data miliknya sendiri.
+
+---
+
+# 23. Performance Rules
+
+Gunakan Server Component sebisa mungkin.
+
+Gunakan Pagination untuk daftar kos.
+
+Gunakan Lazy Loading untuk gambar.
+
+Optimalkan query Supabase agar hanya mengambil data yang diperlukan.
+
+---
+
+# 24. Git Convention
+
+## Branch Utama
+
+```text
+main
+```
+
+## Commit Format
+
+```text
+feat: add owner dashboard
+
+fix: fix login redirect
+
+refactor: optimize kost query
+
+style: improve navbar UI
+```
+
+---
+
+# 25. Deployment Rules
+
+## Platform
+
+Vercel
+
+## Environment Variables
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+---
+
+# 26. Definition of Done (DoD)
+
+Sebuah fitur dianggap selesai jika:
+
+✅ Berjalan tanpa error
+
+✅ Responsive Mobile & Desktop
+
+✅ Menggunakan TypeScript tanpa error
+
+✅ Menggunakan validasi Zod
+
+✅ Menggunakan Shadcn UI
+
+✅ Mendukung Dark Mode
+
+✅ Terhubung ke Supabase
+
+✅ Mengikuti struktur folder proyek
+
+✅ Sudah diuji secara manual
+
+---
+
+# 27. Sprint Development Plan
+
+## Sprint 1
+
+Project Setup
+
+* Next.js
+* Tailwind CSS
+* Shadcn UI
+* Supabase
+
+## Sprint 2
+
+Authentication
+
+* Login
+* Register
+* Role System
+
+## Sprint 3
+
+Landing Page
+
+## Sprint 4
+
+Database Integration
+
+## Sprint 5
+
+Daftar Kos & Detail Kos
+
+## Sprint 6
+
+Dashboard User
+
+## Sprint 7
+
+Dashboard Owner
+
+## Sprint 8
+
+Dashboard Admin
+
+## Sprint 9
+
+Maps & Favorites
+
+## Sprint 10
+
+Testing & Deployment
+
+---
+
+# Final Rule
+
+Setiap kode yang dihasilkan AI harus:
+
+1. Mengikuti JEMBERKOST_MASTER_DOCUMENT.md
+2. Mengikuti JEMBERKOST_DEVELOPMENT_GUIDE.md
+3. Menggunakan best practice Next.js 15 App Router.
+4. Menggunakan TypeScript strict mode.
+5. Menghasilkan kode yang production-ready, scalable, aman, dan mudah dipelihara.

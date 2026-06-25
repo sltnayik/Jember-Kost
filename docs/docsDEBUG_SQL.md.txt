@@ -1,0 +1,394 @@
+# Debug SQL Reference - JemberKost
+
+## Overview
+
+Dokumen ini berisi kumpulan query SQL yang sering digunakan untuk debugging database JemberKost pada Supabase.
+
+Gunakan query ini ketika mengalami masalah:
+
+* Permission denied
+* Row Level Security (RLS)
+* Data tidak muncul
+* Dashboard menampilkan angka 0
+* Insert gagal
+* Update gagal
+* Role tidak terbaca
+* Verifikasi kos bermasalah
+
+---
+
+# 1. Cek Semua Tabel
+
+```sql
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+```
+
+---
+
+# 2. Cek Struktur Semua Tabel
+
+```sql
+SELECT
+    table_name,
+    column_name,
+    data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+ORDER BY table_name, ordinal_position;
+```
+
+---
+
+# 3. Cek Semua Enum
+
+```sql
+SELECT
+    t.typname AS enum_name,
+    e.enumlabel
+FROM pg_type t
+JOIN pg_enum e
+ON t.oid = e.enumtypid
+ORDER BY t.typname, e.enumsortorder;
+```
+
+---
+
+# 4. Cek Enum Role
+
+```sql
+SELECT enumlabel
+FROM pg_enum
+WHERE enumtypid = (
+  SELECT oid
+  FROM pg_type
+  WHERE typname = 'user_role'
+);
+```
+
+---
+
+# 5. Cek Enum Status Kos
+
+```sql
+SELECT enumlabel
+FROM pg_enum
+WHERE enumtypid = (
+  SELECT oid
+  FROM pg_type
+  WHERE typname = 'kost_status'
+);
+```
+
+---
+
+# 6. Cek Semua RLS Policy
+
+```sql
+SELECT
+    schemaname,
+    tablename,
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies
+ORDER BY tablename;
+```
+
+---
+
+# 7. Cek Policy Tabel Tertentu
+
+Contoh tabel kosts:
+
+```sql
+SELECT *
+FROM pg_policies
+WHERE tablename = 'kosts';
+```
+
+---
+
+# 8. Cek Apakah RLS Aktif
+
+```sql
+SELECT
+    schemaname,
+    tablename,
+    rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public';
+```
+
+---
+
+# 9. Cek Semua User Berdasarkan Role
+
+```sql
+SELECT
+    role,
+    COUNT(*)
+FROM profiles
+GROUP BY role;
+```
+
+---
+
+# 10. Cek Data Profile
+
+```sql
+SELECT
+    id,
+    full_name,
+    email,
+    role
+FROM profiles;
+```
+
+---
+
+# 11. Cek Jumlah Kos
+
+```sql
+SELECT COUNT(*)
+FROM kosts;
+```
+
+---
+
+# 12. Cek Kos Belum Diverifikasi
+
+```sql
+SELECT
+    id,
+    name,
+    is_verified
+FROM kosts
+WHERE is_verified = false;
+```
+
+---
+
+# 13. Cek Kos Sudah Diverifikasi
+
+```sql
+SELECT
+    id,
+    name,
+    is_verified
+FROM kosts
+WHERE is_verified = true;
+```
+
+---
+
+# 14. Cek Kos Milik Owner
+
+Ganti USER_ID sesuai owner.
+
+```sql
+SELECT *
+FROM kosts
+WHERE owner_id = 'USER_ID';
+```
+
+---
+
+# 15. Cek Kampus
+
+```sql
+SELECT *
+FROM campuses
+ORDER BY name;
+```
+
+---
+
+# 16. Cek Review
+
+```sql
+SELECT *
+FROM reviews;
+```
+
+---
+
+# 17. Cek Jumlah Review
+
+```sql
+SELECT COUNT(*)
+FROM reviews;
+```
+
+---
+
+# 18. Cek Favorite
+
+```sql
+SELECT *
+FROM favorites;
+```
+
+---
+
+# 19. Cek Verification Request
+
+```sql
+SELECT *
+FROM verification_requests;
+```
+
+---
+
+# 20. Cek Relasi Foreign Key
+
+```sql
+SELECT
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage ccu
+ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY';
+```
+
+---
+
+# 21. Cek Owner dan Kos
+
+```sql
+SELECT
+    p.full_name,
+    p.email,
+    k.name
+FROM profiles p
+JOIN kosts k
+ON p.id = k.owner_id;
+```
+
+---
+
+# 22. Cek Kampus Terdekat yang Tersimpan
+
+```sql
+SELECT
+    k.name,
+    c.name AS campus_name
+FROM kosts k
+LEFT JOIN campuses c
+ON k.campus_id = c.id;
+```
+
+---
+
+# 23. Debug Dashboard Admin
+
+```sql
+SELECT COUNT(*) FROM profiles WHERE role='user';
+
+SELECT COUNT(*) FROM profiles WHERE role='owner';
+
+SELECT COUNT(*) FROM kosts;
+
+SELECT COUNT(*)
+FROM kosts
+WHERE is_verified=false;
+```
+
+---
+
+# 24. Debug Dashboard Owner
+
+```sql
+SELECT
+    COUNT(*) total_kost,
+    SUM(room_total) total_kamar,
+    SUM(room_available) kamar_tersedia
+FROM kosts
+WHERE owner_id = 'OWNER_ID';
+```
+
+---
+
+# 25. Query Cepat Saat Error Permission
+
+Cek policy tabel:
+
+```sql
+SELECT *
+FROM pg_policies
+WHERE tablename = 'nama_tabel';
+```
+
+Cek RLS:
+
+```sql
+SELECT
+    tablename,
+    rowsecurity
+FROM pg_tables
+WHERE tablename = 'nama_tabel';
+```
+
+---
+
+# Common Errors
+
+## permission denied
+
+Penyebab:
+
+* Tidak ada policy
+* RLS aktif
+* Role tidak sesuai
+
+---
+
+## row violates row-level security policy
+
+Penyebab:
+
+* auth.uid() tidak sesuai
+* owner_id salah
+* user_id salah
+
+---
+
+## invalid input value for enum
+
+Penyebab:
+
+* Nilai enum tidak tersedia di database
+
+Contoh:
+
+```text
+pending
+```
+
+padahal enum hanya:
+
+```text
+available
+full
+```
+
+---
+
+## Dashboard Menampilkan 0
+
+Cek:
+
+1. Data benar-benar ada
+2. Policy SELECT tersedia
+3. Role user benar
+4. Query filter tidak salah

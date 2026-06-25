@@ -1,0 +1,258 @@
+# JemberKost Database Schema
+
+## Overview
+
+Database JemberKost menggunakan PostgreSQL (Supabase) dan terdiri dari tabel:
+
+* profiles
+* campuses
+* kosts
+* kost_images
+* facilities
+* kost_facilities
+* favorites
+* reviews
+* reports
+* verification_requests
+
+---
+
+# profiles
+
+Menyimpan data pengguna aplikasi.
+
+| Kolom         | Tipe            |
+| ------------- | --------------- |
+| id            | uuid            |
+| full_name     | text            |
+| email         | text            |
+| phone         | text            |
+| avatar_url    | text            |
+| role          | enum(role_type) |
+| is_active     | boolean         |
+| last_login_at | timestamptz     |
+| created_at    | timestamptz     |
+| updated_at    | timestamptz     |
+
+## Relasi
+
+* profiles.id → kosts.owner_id
+* profiles.id → favorites.user_id
+* profiles.id → reviews.user_id
+* profiles.id → reports.reporter_id
+
+---
+
+# campuses
+
+Menyimpan data kampus di wilayah Jember.
+
+| Kolom      | Tipe        |
+| ---------- | ----------- |
+| id         | uuid        |
+| name       | text        |
+| address    | text        |
+| latitude   | numeric     |
+| longitude  | numeric     |
+| created_at | timestamptz |
+| updated_at | timestamptz |
+
+## Relasi
+
+* campuses.id → kosts.campus_id
+
+---
+
+# kosts
+
+Tabel utama data kos.
+
+| Kolom          | Tipe              |
+| -------------- | ----------------- |
+| id             | uuid              |
+| owner_id       | uuid              |
+| campus_id      | uuid              |
+| name           | text              |
+| slug           | text              |
+| description    | text              |
+| gender_type    | enum(gender_type) |
+| price          | integer           |
+| address        | text              |
+| district       | text              |
+| latitude       | numeric           |
+| longitude      | numeric           |
+| room_total     | integer           |
+| room_available | integer           |
+| status         | enum(kost_status) |
+| whatsapp       | text              |
+| rules          | text              |
+| view_count     | integer           |
+| featured       | boolean           |
+| is_verified    | boolean           |
+| created_at     | timestamptz       |
+| updated_at     | timestamptz       |
+
+## Relasi
+
+* owner_id → profiles.id
+* campus_id → campuses.id
+
+---
+
+# kost_images
+
+Menyimpan gambar kos.
+
+| Kolom        | Tipe        |
+| ------------ | ----------- |
+| id           | uuid        |
+| kost_id      | uuid        |
+| image_url    | text        |
+| is_thumbnail | boolean     |
+| created_at   | timestamptz |
+
+## Relasi
+
+* kost_id → kosts.id
+
+---
+
+# facilities
+
+Master fasilitas.
+
+| Kolom | Tipe |
+| ----- | ---- |
+| id    | uuid |
+| name  | text |
+| icon  | text |
+
+---
+
+# kost_facilities
+
+Tabel relasi many-to-many antara kos dan fasilitas.
+
+| Kolom       | Tipe |
+| ----------- | ---- |
+| kost_id     | uuid |
+| facility_id | uuid |
+
+## Relasi
+
+* kost_id → kosts.id
+* facility_id → facilities.id
+
+---
+
+# favorites
+
+Daftar kos favorit pengguna.
+
+| Kolom      | Tipe        |
+| ---------- | ----------- |
+| id         | uuid        |
+| user_id    | uuid        |
+| kost_id    | uuid        |
+| created_at | timestamptz |
+
+## Relasi
+
+* user_id → profiles.id
+* kost_id → kosts.id
+
+---
+
+# reviews
+
+Ulasan dan rating kos.
+
+| Kolom      | Tipe        |
+| ---------- | ----------- |
+| id         | uuid        |
+| kost_id    | uuid        |
+| user_id    | uuid        |
+| rating     | integer     |
+| comment    | text        |
+| is_hidden  | boolean     |
+| created_at | timestamptz |
+
+## Relasi
+
+* kost_id → kosts.id
+* user_id → profiles.id
+
+---
+
+# reports
+
+Laporan terhadap kos.
+
+| Kolom       | Tipe                |
+| ----------- | ------------------- |
+| id          | uuid                |
+| reporter_id | uuid                |
+| kost_id     | uuid                |
+| reason      | text                |
+| status      | enum(report_status) |
+| created_at  | timestamptz         |
+
+## Relasi
+
+* reporter_id → profiles.id
+* kost_id → kosts.id
+
+---
+
+# verification_requests
+
+Riwayat verifikasi kos.
+
+| Kolom      | Tipe                      |
+| ---------- | ------------------------- |
+| id         | uuid                      |
+| kost_id    | uuid                      |
+| owner_id   | uuid                      |
+| status     | enum(verification_status) |
+| notes      | text                      |
+| created_at | timestamptz               |
+
+## Relasi
+
+* kost_id → kosts.id
+* owner_id → profiles.id
+
+---
+
+# Enum
+
+## role_type
+
+* admin
+* owner
+* user
+
+## kost_status
+
+* available
+* full
+* pending
+* rejcted
+
+## gender_type
+
+* putra
+* putri
+* campur
+
+## report_status
+
+* pending
+* resolved
+* rejected
+
+## verification_status
+
+* false
+* null
+

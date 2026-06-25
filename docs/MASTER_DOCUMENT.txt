@@ -1,0 +1,803 @@
+# JemberKost
+
+## Tagline
+
+Temukan Kos Terbaik di Jember dengan Mudah dan Cepat
+
+---
+
+# Latar Belakang
+
+Kabupaten Jember merupakan salah satu kota pendidikan di Jawa Timur yang memiliki banyak perguruan tinggi seperti Universitas Jember, Politeknik Negeri Jember, UIN KHAS Jember, dan kampus lainnya.
+
+Setiap tahun ribuan mahasiswa baru datang ke Jember dan membutuhkan tempat tinggal sementara berupa kos.
+
+Saat ini proses pencarian kos masih dilakukan secara manual melalui media sosial, grup WhatsApp, rekomendasi teman, atau survei langsung ke lokasi. Informasi kos sering kali tersebar, tidak terpusat, tidak terverifikasi, dan sulit dibandingkan.
+
+JemberKost hadir sebagai platform pencarian kos berbasis web yang menyediakan informasi kos yang terpusat, lengkap, dan terpercaya sehingga mahasiswa dapat menemukan kos yang sesuai dengan kebutuhan mereka secara lebih cepat dan efisien.
+
+---
+
+# Deskripsi Proyek
+
+JemberKost adalah platform pencarian kos berbasis web yang membantu mahasiswa menemukan tempat tinggal yang sesuai dengan kebutuhan mereka secara cepat, mudah, dan terpercaya.
+
+Platform ini menyediakan informasi kos yang terpusat, lengkap, dan terverifikasi sehingga mahasiswa tidak perlu lagi mencari kos secara manual atau melalui berbagai media sosial yang tersebar.
+
+---
+
+# Tujuan Sistem
+
+1. Memudahkan mahasiswa mencari kos di Kabupaten Jember.
+2. Menyediakan informasi kos yang lengkap dan terverifikasi.
+3. Membantu pemilik kos mempromosikan kos secara digital.
+4. Menjadi pusat informasi kos yang terintegrasi dalam satu platform.
+5. Mengurangi waktu dan biaya yang dibutuhkan mahasiswa dalam mencari kos.
+
+---
+
+# Target Pengguna
+
+## Mahasiswa
+
+### Target
+
+* Mahasiswa baru
+* Mahasiswa aktif
+* Mahasiswa luar kota
+
+### Kebutuhan
+
+* Mencari kos sesuai budget
+* Membandingkan fasilitas kos
+* Mengetahui lokasi kos
+* Menghubungi pemilik kos dengan mudah
+* Menyimpan kos favorit
+* Memberikan ulasan terhadap kos
+
+---
+
+## Pemilik Kos
+
+### Target
+
+* Pemilik kos putra
+* Pemilik kos putri
+* Pemilik kos campur
+
+### Kebutuhan
+
+* Mempromosikan kos secara digital
+* Mengelola informasi kos
+* Mengelola ketersediaan kamar
+* Mendapatkan calon penyewa
+
+---
+
+## Admin
+
+### Tugas
+
+* Verifikasi data kos
+* Moderasi ulasan
+* Manajemen pengguna
+* Monitoring aktivitas sistem
+
+---
+
+# Daftar Kampus yang Didukung
+
+* Universitas Jember (UNEJ)
+* Politeknik Negeri Jember (POLIJE)
+* UIN Kiai Haji Achmad Siddiq Jember
+* Universitas Terbuka (UT)
+* Universitas Muhammadiyah Jember
+* Universitas Islam Jember
+* Universitas dr. Soebandi
+* Universitas PGRI Argopuro Jember
+* Universitas Mochammad Sroedji
+* Institut Teknologi dan Sains Mandala
+* Universitas PGRI Jember
+* STIA Pembangunan Jember
+* Akademi Kebidanan Jember
+* Akademi Farmasi Jember
+* Akademi Pariwisata Muhammadiyah Jember
+* STDI Imam Syafi'i Jember
+
+---
+
+# Role System
+
+## Guest
+
+Dapat:
+
+* Melihat daftar kos
+* Melihat detail kos
+* Mencari kos
+* Menggunakan filter pencarian
+
+Tidak dapat:
+
+* Menyimpan favorit
+* Memberikan review
+* Melaporkan kos
+
+---
+
+## User
+
+Dapat:
+
+* Login
+* Menyimpan favorit
+* Memberikan review
+* Mengelola profil
+* Melaporkan kos
+
+---
+
+## Owner
+
+Dapat:
+
+* Login
+* Menambah kos
+* Mengedit kos
+* Menghapus kos
+* Upload foto kos
+* Mengelola fasilitas kos
+* Mengubah status ketersediaan kamar
+
+---
+
+## Admin
+
+Dapat:
+
+* Verifikasi kos
+* Moderasi review
+* Mengelola pengguna
+* Mengelola laporan
+
+---
+
+# Fitur MVP (Minimum Viable Product)
+
+## 1. Autentikasi
+
+### Login
+
+* Email dan Password
+* Google Login
+
+### Registrasi
+
+* User (Mahasiswa / Masyarakat Umum)
+* Owner (Pemilik Kos)
+
+---
+
+## 2. Pencarian Kos
+
+### Search Bar
+
+Pengguna dapat mencari berdasarkan:
+
+* Nama kos
+* Alamat
+* Kecamatan
+
+### Filter
+
+* Harga
+* Kecamatan
+* Jenis Kos (Putra, Putri, Campur)
+* Status Ketersediaan
+* Dekat Kampus
+
+---
+
+## 3. Detail Kos
+
+Informasi yang ditampilkan:
+
+* Nama kos
+* Foto kos
+* Harga per bulan
+* Deskripsi kos
+* Fasilitas
+* Aturan kos
+* Lokasi pada Leaflet Maps
+* Alamat lengkap
+* Status ketersediaan
+* Rating dan ulasan
+* Nama pemilik
+
+### Tombol Hubungi Pemilik
+
+Button:
+
+"HUBUNGI VIA WHATSAPP"
+
+Format:
+
+https://wa.me/nomor_pemilik
+
+Contoh:
+
+https://wa.me/6281234567890
+
+Pesan otomatis:
+
+Halo, saya melihat informasi kos Anda di JemberKost. Apakah kamar masih tersedia?
+
+---
+
+## 4. Sistem Review dan Rating
+
+User dapat memberikan:
+
+* Rating (1–5)
+* Ulasan
+
+Contoh:
+
+⭐⭐⭐⭐⭐
+
+"Kamar bersih, nyaman, dan dekat dengan UNEJ."
+
+---
+
+## 5. Favorit
+
+User dapat:
+
+* Menyimpan kos favorit
+* Menghapus kos favorit
+* Melihat daftar favorit
+
+---
+
+## 6. Dashboard Owner
+
+### Kelola Kos
+
+* Tambah kos
+* Edit kos
+* Hapus kos
+* Upload foto kos
+* Kelola fasilitas
+* Kelola jumlah kamar
+
+### Status Ketersediaan
+
+* Tersedia
+* Penuh
+
+---
+
+## 7. Dashboard Admin
+
+### Manajemen Pengguna
+
+* Melihat pengguna
+* Menonaktifkan akun
+
+### Verifikasi Kos
+
+* Approve kos
+* Reject kos
+
+### Moderasi Review
+
+* Menyembunyikan review
+* Menghapus review
+
+---
+
+# Fitur Premium (Versi Pengembangan)
+
+## 1. Peta Interaktif
+
+Menggunakan Leaflet dan OpenStreetMap.
+
+Pengguna dapat melihat seluruh kos pada peta dan memilih kos langsung dari marker.
+
+---
+
+## 2. Perhitungan Jarak Kampus
+
+Contoh:
+
+Kos Melati
+
+450 meter dari Universitas Jember
+
+Kos Mawar
+
+1,2 km dari Universitas Jember
+
+---
+
+## 3. Smart Recommendation
+
+Input:
+
+* Budget
+* Jenis Kos
+* Kampus Tujuan
+
+Output:
+
+Rekomendasi kos terbaik berdasarkan preferensi pengguna.
+
+---
+
+# Future Development
+
+## AI Chat Assistant
+
+Membantu pengguna mencari kos berdasarkan kebutuhan.
+
+Contoh:
+
+"Saya mahasiswa UNEJ dengan budget maksimal Rp700.000."
+
+---
+
+## Virtual Tour
+
+Menampilkan foto 360° atau video kos.
+
+---
+
+## Booking Kos
+
+Mahasiswa dapat mengajukan pemesanan kamar secara online.
+
+---
+
+## Sistem Notifikasi
+
+* Kos baru
+* Kos favorit tersedia
+* Status booking
+
+---
+
+# User Flow
+
+Guest
+↓
+Cari Kos
+↓
+Lihat Detail Kos
+↓
+Login
+↓
+Favorit atau Review
+↓
+Hubungi Pemilik via WhatsApp
+
+---
+
+# Owner Flow
+
+Register Owner
+↓
+Login
+↓
+Tambah Kos
+↓
+Upload Foto
+↓
+Submit Verifikasi
+↓
+Admin Verifikasi
+↓
+Kos Tampil di Website
+
+---
+
+# Admin Flow
+
+Login
+↓
+Review Pengajuan Kos
+↓
+Approve atau Reject
+↓
+Moderasi Review
+↓
+Kelola Pengguna
+
+---
+
+# Teknologi yang Digunakan
+
+## Frontend
+
+* Next.js 16
+* TypeScript
+* Tailwind CSS
+* Shadcn UI
+
+## Backend & Database
+
+* Supabase PostgreSQL
+* Supabase Auth
+* Supabase Storage
+
+## Maps
+
+* Leaflet
+* OpenStreetMap
+
+## Deployment
+
+* Vercel
+
+---
+
+# Design System
+
+## Design Style
+
+Modern SaaS + Airbnb Style
+
+## Primary Color
+
+#16A34A
+
+## Secondary Color
+
+#0F172A
+
+## Accent Color
+
+#F59E0B
+
+## Font
+
+Inter
+
+## Border Radius
+
+rounded-2xl
+
+## Icons
+
+Lucide React
+
+## Dark Mode
+
+Supported
+
+---
+
+# Struktur Database
+
+## profiles
+
+* id
+* full_name
+* email
+* phone
+* avatar_url
+* role
+* is_active
+* last_login_at
+* created_at
+* updated_at
+
+Role:
+
+* admin
+* owner
+* user
+
+---
+
+## kosts
+
+* id
+* owner_id
+* campus_id
+* name
+* slug
+* description
+* gender_type
+* price
+* address
+* district
+* latitude
+* longitude
+* room_total
+* room_available
+* status
+* whatsapp
+* rules
+* view_count
+* featured
+* is_verified
+* created_at
+* updated_at
+
+Gender Type:
+
+* putra
+* putri
+* campur
+
+Status:
+
+* available
+* full
+
+---
+
+## kost_images
+
+* id
+* kost_id
+* image_url
+* is_thumbnail
+* created_at
+
+---
+
+## facilities
+
+* id
+* name
+* icon
+
+---
+
+## kost_facilities
+
+* kost_id
+* facility_id
+
+---
+
+## reviews
+
+* id
+* kost_id
+* user_id
+* rating
+* comment
+* is_hidden
+* created_at
+
+---
+
+## favorites
+
+* id
+* user_id
+* kost_id
+* created_at
+
+---
+
+## reports
+
+* id
+* reporter_id
+* kost_id
+* reason
+* status
+* created_at
+
+Status:
+
+* pending
+* reviewed
+* resolved
+
+---
+
+## verification_requests
+
+* id
+* kost_id
+* owner_id
+* status
+* notes
+* created_at
+
+Status:
+
+* pending
+* approved
+* rejected
+
+
+## campuses
+
+* id
+* name
+* address
+* latitude
+* longitude
+* created_at
+* updated_at
+
+Contoh data:
+
+* Universitas Jember (UNEJ)
+* Politeknik Negeri Jember (POLIJE)
+* UIN Kiai Haji Achmad Siddiq Jember
+* Universitas Muhammadiyah Jember
+* Universitas Islam Jember
+* Universitas dr. Soebandi
+* Institut Teknologi dan Sains Mandala
+---
+
+# Arsitektur Software
+
+src
+
+├── app
+│
+├── components
+│
+├── features
+│
+├── services
+│
+├── providers
+│
+├── hooks
+│
+├── types
+│
+├── lib
+│
+└── middleware.ts
+
+---
+
+# Struktur Folder
+
+│   middleware.ts
+│   
+├───app
+│   │   favicon.ico
+│   │   globals.css
+│   │   layout.tsx
+│   │   
+│   ├───(public)
+│   │   │   page.tsx
+│   │   │   
+│   │   ├───about
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───contact
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───kost
+│   │   │   │   page.tsx
+│   │   │   │   
+│   │   │   └───[slug]
+│   │   │           page.tsx
+│   │   │           
+│   │   └───map
+│   │           page.tsx
+│   │           
+│   ├───admin
+│   │   │   page.tsx
+│   │   │   
+│   │   ├───kosts
+│   │   ├───owners
+│   │   ├───reports
+│   │   └───users
+│   ├───api
+│   ├───auth
+│   │   ├───login
+│   │   │       page.tsx
+│   │   │       
+│   │   └───register
+│   │           page.tsx
+│   │           
+│   ├───dashboard
+│   │       page.tsx
+│   │       
+│   └───owner
+│       │   page.tsx
+│       │   
+│       └───kost
+│           │   page.tsx
+│           │   
+│           ├───add
+│           │       page.tsx
+│           │       
+│           └───[id]
+│               └───edit
+│                       page.tsx
+│                       
+├───components
+│   ├───shared
+│   │   ├───footer
+│   │   ├───navbar
+│   │   ├───page-header
+│   │   └───theme-toggle
+│   └───ui
+│           avatar.tsx
+│           badge.tsx
+│           button.tsx
+│           card.tsx
+│           dialog.tsx
+│           dropdown-menu.tsx
+│           input.tsx
+│           select.tsx
+│           skeleton.tsx
+│           sonner.tsx
+│           table.tsx
+│           textarea.tsx
+│           
+├───features
+│   ├───auth
+│   ├───favorite
+│   ├───kost
+│   ├───report
+│   └───review
+├───hooks
+├───lib
+│   │   utils.ts
+│   │   
+│   ├───constants
+│   └───supabase
+├───providers
+├───services
+└───types
+        auth.ts
+        database.ts
+        favorite.ts
+        kosts.ts
+        review.ts
+
+---
+
+# Route Utama
+
+## Public
+
+* /
+* /kost
+* /kost/[slug]
+* /map
+* /about
+* /contact
+
+## Authentication
+
+* /login
+* /register
+
+## User
+
+* /dashboard
+* /dashboard/favorites
+* /dashboard/reviews
+* /dashboard/profile
+
+## Owner
+
+* /owner
+* /owner/kost
+* /owner/kost/add
+* /owner/kost/edit/[id]
+* /owner/reviews
+* /owner/profile
+
+## Admin
+
+* /admin
+* /admin/users
+* /admin/kosts
+* /admin/reports
+* /admin/reviews

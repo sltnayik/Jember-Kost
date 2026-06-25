@@ -1,0 +1,342 @@
+# Row Level Security (RLS) Policies
+
+## Overview
+
+JemberKost menggunakan Row Level Security (RLS) Supabase untuk membatasi akses data berdasarkan role pengguna.
+
+RLS memastikan:
+
+* User hanya dapat mengakses data miliknya sendiri
+* Owner hanya dapat mengelola kos miliknya sendiri
+* Admin dapat melihat seluruh data
+* Data publik tetap dapat diakses pengunjung
+
+---
+
+# Profiles
+
+## profiles_admin_read
+
+### Table
+
+```sql
+profiles
+```
+
+### Action
+
+```sql
+SELECT
+```
+
+### Role
+
+```sql
+authenticated
+```
+
+### Policy
+
+```sql
+true
+```
+
+### Purpose
+
+Mengizinkan admin membaca seluruh data profil.
+
+---
+
+## profiles_select_own
+
+### Action
+
+```sql
+SELECT
+```
+
+### Policy
+
+```sql
+auth.uid() = id
+```
+
+### Purpose
+
+User hanya dapat melihat profil miliknya sendiri.
+
+---
+
+## profiles_update_own
+
+### Action
+
+```sql
+UPDATE
+```
+
+### Policy
+
+```sql
+auth.uid() = id
+```
+
+### Purpose
+
+User hanya dapat mengubah profil miliknya sendiri.
+
+---
+
+# Kosts
+
+## public can read verified kost
+
+### Action
+
+```sql
+SELECT
+```
+
+### Role
+
+```sql
+public
+```
+
+### Policy
+
+```sql
+is_verified = true
+```
+
+### Purpose
+
+Pengunjung dapat melihat kos yang telah diverifikasi.
+
+---
+
+## owner read own kost
+
+### Action
+
+```sql
+SELECT
+```
+
+### Policy
+
+```sql
+auth.uid() = owner_id
+```
+
+### Purpose
+
+Owner dapat melihat kos miliknya sendiri termasuk yang belum diverifikasi.
+
+---
+
+## owner insert kost
+
+### Action
+
+```sql
+INSERT
+```
+
+### Policy
+
+```sql
+auth.uid() = owner_id
+```
+
+### Purpose
+
+Owner dapat menambahkan kos baru.
+
+---
+
+## owner update own kost
+
+### Action
+
+```sql
+UPDATE
+```
+
+### Policy
+
+```sql
+auth.uid() = owner_id
+```
+
+### Purpose
+
+Owner dapat mengubah data kos miliknya.
+
+---
+
+## owner_delete_kost
+
+### Action
+
+```sql
+DELETE
+```
+
+### Policy
+
+```sql
+auth.uid() = owner_id
+```
+
+### Purpose
+
+Owner dapat menghapus kos miliknya.
+
+---
+
+## kosts_admin_read
+
+### Action
+
+```sql
+SELECT
+```
+
+### Role
+
+```sql
+authenticated
+```
+
+### Policy
+
+```sql
+true
+```
+
+### Purpose
+
+Admin dapat melihat seluruh data kos untuk proses moderasi dan verifikasi.
+
+---
+
+# Campuses
+
+## campuses_select
+
+### Action
+
+```sql
+SELECT
+```
+
+### Role
+
+```sql
+authenticated
+```
+
+### Policy
+
+```sql
+true
+```
+
+### Purpose
+
+Mengizinkan pengguna login membaca daftar kampus.
+
+---
+
+# Reviews
+
+## public review read
+
+### Action
+
+```sql
+SELECT
+```
+
+### Role
+
+```sql
+public
+```
+
+### Policy
+
+```sql
+is_hidden = false
+```
+
+### Purpose
+
+Hanya review yang tidak disembunyikan yang dapat ditampilkan.
+
+---
+
+## user create review
+
+### Action
+
+```sql
+INSERT
+```
+
+### Policy
+
+```sql
+auth.uid() = user_id
+```
+
+### Purpose
+
+User hanya dapat membuat review atas nama dirinya sendiri.
+
+---
+
+# Security Notes
+
+## Rule 1
+
+Jangan pernah membuat policy:
+
+```sql
+USING (true)
+```
+
+untuk tabel sensitif seperti:
+
+* profiles
+* favorites
+* reports
+* verification_requests
+
+karena dapat menyebabkan kebocoran data.
+
+---
+
+## Rule 2
+
+Setiap tabel baru wajib memiliki:
+
+* SELECT policy
+* INSERT policy
+* UPDATE policy
+* DELETE policy
+
+jika tabel digunakan oleh aplikasi.
+
+---
+
+## Rule 3
+
+Setelah membuat tabel baru, selalu lakukan pengujian:
+
+* login user
+* login owner
+* login admin
+
+untuk memastikan policy berjalan sesuai kebutuhan.

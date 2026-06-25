@@ -160,7 +160,10 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
   const searchQuery = sanitizeSearchQuery(filters.query);
   const shouldSortByRating = filters.sort === "rating_high";
 
-  let query = supabase.from("kosts").select("*", { count: "exact" });
+  let query = supabase
+    .from("kosts")
+    .select("*", { count: "exact" })
+    .eq("is_verified", true);
 
   if (searchQuery) {
     query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`);
@@ -202,7 +205,7 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
     ? await query
     : await query.range(from, to);
 
-  const rows = ((data ?? []) as KostRow[]).filter((kost) => kost.is_verified ?? true);
+  const rows = (data ?? []) as KostRow[];
   const userId = await getCurrentUserId();
   let enriched = await enrichKostRows(rows, userId);
 
@@ -258,6 +261,7 @@ export async function getKostBySlug(slug: string): Promise<KostDetailData | null
     .from("kosts")
     .select("*")
     .eq("slug", slug)
+    .eq("is_verified", true)
     .maybeSingle();
 
   if (!kost) {
@@ -312,7 +316,11 @@ export async function getKostFilterOptions(): Promise<KostFilterOptions> {
   const supabase = await createClient();
   const [{ data: campuses }, { data: kosts }] = await Promise.all([
     supabase.from("campuses").select("id, name").order("name", { ascending: true }),
-    supabase.from("kosts").select("district").not("district", "is", null),
+    supabase
+      .from("kosts")
+      .select("district")
+      .eq("is_verified", true)
+      .not("district", "is", null),
   ]);
 
   const districts = (kosts ?? [])

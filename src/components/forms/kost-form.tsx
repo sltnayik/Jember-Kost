@@ -83,7 +83,17 @@ export default function KostForm() {
       formData.set("latitude", latitude);
       formData.set("longitude", longitude);
 
-      await createKost(formData);
+      const result = await createKost(formData);
+
+      if (!result.success) {
+        setFormError(result.message);
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+
+      window.location.href = "/owner/kost";
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : "Gagal menyimpan kos. Silakan coba lagi.";

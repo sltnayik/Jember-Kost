@@ -1,13 +1,7 @@
 "use server";
-
-import { redirect } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/server";
-
 import { createKostSchema } from "@/validations/kost";
-
 import { getCampuses } from "@/services/campus.service";
-
 import { calculateDistance } from "@/services/location.service";
 
 function generateSlug(text: string) {
@@ -132,13 +126,22 @@ export async function createKost(formData: FormData) {
 
     rules: parsed.rules,
 
-    status: "available",
+    status: "pending",
+
+    is_verified: false,
   });
 
   if (error) {
     console.error(error);
-    throw new Error(error.message);
+
+    return {
+      success: false,
+      message: error.message,
+    };
   }
 
-  redirect("/owner/kost");
+  return {
+    success: true,
+    message: "Kos berhasil ditambahkan dan menunggu verifikasi admin.",
+  };
 }

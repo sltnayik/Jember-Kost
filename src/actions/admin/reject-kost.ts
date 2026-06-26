@@ -23,7 +23,7 @@ export async function rejectKost(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("kosts")
     .update({
       is_verified: false,

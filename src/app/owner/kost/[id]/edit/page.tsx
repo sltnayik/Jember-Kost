@@ -1,10 +1,18 @@
-export default function EditKostPage() {
+import { EditKostForm } from "@/components/owner/edit-kost-form";
+import { OwnerShell } from "@/components/owner/owner-shell";
+import { getOwnerKostDetail } from "@/services/owner.service";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function EditKostPage({ params }: Props) {
+  const { id } = await params;
+  const kost = await getOwnerKostDetail(id);
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold text-[#0F172A]">Edit Kos</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Perbarui informasi kos yang sudah terdaftar.
-      </p>
-    </main>
+    <OwnerShell title="Edit Kos" description="Perbarui informasi kos, lokasi, harga, rules, WhatsApp, gender, dan jumlah kamar.">
+      <EditKostForm kost={kost} />
+    </OwnerShell>
   );
 }

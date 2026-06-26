@@ -8,12 +8,13 @@ import {
   PlusCircle,
   Star,
   User,
+  BarChart3,
 } from "lucide-react";
 
 const menus = [
   {
     title: "Dashboard",
-    href: "/owner",
+    href: "/owner/dashboard",
     icon: LayoutDashboard,
   },
   {
@@ -32,9 +33,14 @@ const menus = [
     icon: Star,
   },
   {
-    title: "Profile",
+    title: "Profil",
     href: "/owner/profile",
     icon: User,
+  },
+  {
+    title: "Laporan",
+    href: "/owner/report",
+    icon: BarChart3,
   },
 ];
 
@@ -53,7 +59,7 @@ export default function OwnerSidebar() {
               href={menu.href}
               className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition hover:bg-muted
                 ${
-                  pathname === menu.href
+                  pathname === menu.href || (menu.href === "/owner/dashboard" && pathname === "/owner")
                     ? "bg-green-600 text-white"
                     : ""
                 }`}

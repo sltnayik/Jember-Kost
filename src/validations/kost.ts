@@ -52,3 +52,21 @@ export const createKostSchema = z.object({
 
 export type CreateKostInput =
   z.infer<typeof createKostSchema>;
+
+export const updateKostSchema = createKostSchema.extend({
+  room_available: z.coerce.number().min(0, "Kamar tersedia tidak boleh negatif"),
+}).refine((value) => value.room_available <= value.room_total, {
+  message: "Kamar tersedia tidak boleh lebih besar dari jumlah kamar",
+  path: ["room_available"],
+});
+
+export const updateRoomsSchema = z.object({
+  room_total: z.coerce.number().min(1, "Jumlah kamar minimal 1"),
+  room_available: z.coerce.number().min(0, "Kamar tersedia tidak boleh negatif"),
+}).refine((value) => value.room_available <= value.room_total, {
+  message: "Kamar tersedia tidak boleh lebih besar dari jumlah kamar",
+  path: ["room_available"],
+});
+
+export type UpdateKostInput = z.infer<typeof updateKostSchema>;
+export type UpdateRoomsInput = z.infer<typeof updateRoomsSchema>;

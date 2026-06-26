@@ -2,6 +2,7 @@ import { rejectKost } from "@/actions/admin/reject-kost";
 import { verifyKost } from "@/actions/admin/verify-kost";
 import { AdminKostToast } from "@/components/admin/admin-kost-toast";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -153,6 +154,10 @@ export default async function AdminKostPage() {
                 <TableCell>{formatCreatedAt(kost.created_at)}</TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/admin/kost/${kost.id}`}>Detail</Link>
+                    </Button>
+
                     <form action={verifyKost}>
                       <input type="hidden" name="kost_id" value={kost.id} />
                       <Button type="submit" size="sm">

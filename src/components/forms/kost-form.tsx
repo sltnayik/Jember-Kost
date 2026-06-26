@@ -1,8 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { AlertCircle, Home, Loader2, MapPin } from "lucide-react";
-import { useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Check, Home, ImagePlus, Loader2, MapPin, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -19,11 +21,50 @@ const KostLocationMap = dynamic(() => import("@/components/maps/kost-location-ma
   ssr: false,
 });
 
+const MAX_KOST_IMAGES = 10;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+const CREATE_KOST_TIMEOUT_MS = 45000;
+
+type SelectedImage = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
+function getFileExtension(file: File) {
+  return file.name.split(".").pop()?.toLowerCase() ?? "";
+}
+
+function withActionTimeout<T>(promise: Promise<T>, timeoutMs: number, fallbackMessage: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(fallbackMessage));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
+}
+
 export default function KostForm() {
+  const router = useRouter();
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [thumbnailId, setThumbnailId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedImagesRef = useRef<SelectedImage[]>([]);
 
   const form = useForm<CreateKostInput>({
     defaultValues: {
@@ -42,6 +83,96 @@ export default function KostForm() {
   });
 
   const locationSelected = latitude !== "" && longitude !== "";
+  const thumbnailIndex = selectedImages.findIndex((image) => image.id === thumbnailId);
+
+  useEffect(() => {
+    selectedImagesRef.current = selectedImages;
+  }, [selectedImages]);
+
+  useEffect(() => {
+    return () => {
+      selectedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+    };
+  }, []);
+
+  function setImageError(message: string) {
+    setFormError(message);
+    toast.error(message);
+  }
+
+  function validateImage(file: File) {
+    const extension = getFileExtension(file);
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type) || !ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+      return "Format foto harus jpg, jpeg, png, atau webp.";
+    }
+
+    return null;
+  }
+
+  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    if (selectedImages.length + files.length > MAX_KOST_IMAGES) {
+      setImageError(`Maksimal ${MAX_KOST_IMAGES} foto kos.`);
+      event.target.value = "";
+      return;
+    }
+
+    const nextImages: SelectedImage[] = [];
+
+    for (const file of files) {
+      const imageError = validateImage(file);
+
+      if (imageError) {
+        nextImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+        setImageError(imageError);
+        event.target.value = "";
+        return;
+      }
+
+      nextImages.push({
+        id: crypto.randomUUID(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    }
+
+    setFormError(null);
+    const shouldSetInitialThumbnail = !thumbnailId && selectedImages.length === 0 && nextImages[0];
+
+    setSelectedImages((currentImages) => {
+      const images = [...currentImages, ...nextImages];
+
+      return images;
+    });
+
+    if (shouldSetInitialThumbnail) {
+      setThumbnailId(nextImages[0].id);
+    }
+    event.target.value = "";
+  }
+
+  function removeImage(imageId: string) {
+    setSelectedImages((currentImages) => {
+      const removedImage = currentImages.find((image) => image.id === imageId);
+      const images = currentImages.filter((image) => image.id !== imageId);
+
+      if (removedImage) {
+        URL.revokeObjectURL(removedImage.previewUrl);
+      }
+
+      if (thumbnailId === imageId) {
+        setThumbnailId(images[0]?.id ?? null);
+      }
+
+      return images;
+    });
+  }
 
   async function onSubmit(values: CreateKostInput) {
     setFormError(null);
@@ -82,18 +213,37 @@ export default function KostForm() {
 
       formData.set("latitude", latitude);
       formData.set("longitude", longitude);
+      formData.set("thumbnail_index", String(thumbnailIndex >= 0 ? thumbnailIndex : 0));
 
-      const result = await createKost(formData);
+      console.log("CLIENT IMAGE SUBMIT", {
+        selectedImageCount: selectedImages.length,
+        images: selectedImages.map((image) => ({
+          name: image.file.name,
+          size: image.file.size,
+          type: image.file.type,
+        })),
+      });
 
-      if (!result.success) {
-        setFormError(result.message);
-        toast.error(result.message);
+      selectedImages.forEach((image) => {
+        formData.append("images", image.file, image.file.name);
+      });
+
+      const result = await withActionTimeout(createKost(formData), CREATE_KOST_TIMEOUT_MS, "Permintaan menyimpan kos terlalu lama. Silakan coba lagi.");
+
+      if (!result?.success) {
+        const message = result?.message ?? "Gagal menyimpan kos. Silakan coba lagi.";
+        setFormError(message);
+        toast.error(message, {
+          description: "Foto kos tidak berhasil diunggah. Periksa bucket storage dan kebijakan akses Supabase.",
+        });
         return;
       }
 
-      toast.success(result.message);
+      setIsSubmitting(false);
+      toast.success(result.message ?? "Kos berhasil disimpan.");
 
-      window.location.href = "/owner/kost";
+      router.replace(result.redirectTo ?? "/owner/kost");
+      router.refresh();
     } catch (error) {
       console.error(error);
       const message = error instanceof Error ? error.message : "Gagal menyimpan kos. Silakan coba lagi.";
@@ -268,6 +418,64 @@ export default function KostForm() {
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white p-4">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="font-medium text-[#0F172A]">Foto kos</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Unggah hingga {MAX_KOST_IMAGES} foto. Format yang didukung: jpg, jpeg, png, webp.</p>
+                </div>
+
+                <Button type="button" variant="outline" className="w-full sm:w-auto" disabled={isSubmitting || selectedImages.length >= MAX_KOST_IMAGES} onClick={() => fileInputRef.current?.click()}>
+                  <ImagePlus />
+                  Tambah foto
+                </Button>
+              </div>
+
+              <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={isSubmitting} onChange={handleImageChange} />
+
+              {selectedImages.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {selectedImages.map((image) => {
+                    const isThumbnail = image.id === thumbnailId;
+
+                    return (
+                      <div key={image.id} className="overflow-hidden rounded-xl border bg-muted/40">
+                        <div className="relative">
+                          <div className="relative aspect-[4/3]">
+                            <Image src={image.previewUrl} alt={image.file.name} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized className="object-cover" />
+                          </div>
+                          {isThumbnail ? (
+                            <div className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#16A34A] px-2 py-1 text-xs font-medium text-white">
+                              <Check className="size-3" />
+                              Thumbnail
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="grid gap-2 p-3">
+                          <p className="truncate text-sm font-medium text-[#0F172A]">{image.file.name}</p>
+                          <div className="flex gap-2">
+                            <Button type="button" size="sm" variant={isThumbnail ? "secondary" : "outline"} className="flex-1" disabled={isSubmitting} onClick={() => setThumbnailId(image.id)}>
+                              {isThumbnail ? "Thumbnail" : "Jadikan thumbnail"}
+                            </Button>
+                            <Button type="button" size="icon-sm" variant="destructive" disabled={isSubmitting} aria-label={`Hapus ${image.file.name}`} onClick={() => removeImage(image.id)}>
+                              <Trash2 />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 px-4 text-center">
+                  <ImagePlus className="mb-3 size-8 text-muted-foreground" />
+                  <p className="text-sm font-medium text-[#0F172A]">Belum ada foto dipilih</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Foto dapat dipilih sekaligus sebelum kos disimpan.</p>
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl border border-[#16A34A]/15 bg-[#F0FDF4]/70 p-4">

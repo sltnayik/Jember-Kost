@@ -1,10 +1,21 @@
-export default function UserProfilePage() {
+import { getCurrentProfile } from "@/services/auth";
+import { ProfileShell } from "@/components/user/profile-shell";
+
+export default async function UserProfilePage() {
+  const profile = await getCurrentProfile();
+
+  if (!profile) {
+    return null;
+  }
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold text-[#0F172A]">Profil</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Informasi profil akun JemberKost Anda.
-      </p>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">Profil</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Profil pengguna</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Perbarui nama, foto, dan nomor WhatsApp untuk pengalaman yang lebih personal.</p>
+      </div>
+      <ProfileShell profile={profile} />
     </main>
   );
 }

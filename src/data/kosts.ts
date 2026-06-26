@@ -2,20 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/services/auth";
-import type {
-  KostCampus,
-  KostCardData,
-  KostDetailData,
-  KostDetailReview,
-  KostFacility,
-  KostFilterOptions,
-  KostFilters,
-  KostImage,
-  KostListResult,
-  KostReview,
-  KostRow,
-  LandingStats,
-} from "@/types/kosts";
+import type { KostCampus, KostCardData, KostDetailData, KostDetailReview, KostFacility, KostFilterOptions, KostFilters, KostImage, KostListResult, KostReview, KostRow, LandingStats } from "@/types/kosts";
 import type { Tables } from "@/types/database";
 
 const DEFAULT_PER_PAGE = 9;
@@ -24,6 +11,8 @@ const LATEST_LIMIT = 8;
 
 type KostFacilityLink = Pick<Tables<"kost_facilities">, "kost_id" | "facility_id">;
 type ProfilePreview = Pick<Tables<"profiles">, "id" | "full_name" | "avatar_url">;
+
+type OwnerPreview = Pick<Tables<"profiles">, "id" | "full_name" | "avatar_url" | "phone">;
 
 function normalizePage(value: number | undefined) {
   if (!value || Number.isNaN(value) || value < 1) {
@@ -43,6 +32,17 @@ function normalizePerPage(value: number | undefined) {
 
 function sanitizeSearchQuery(query: string | undefined) {
   return query?.trim().replace(/[,%()]/g, " ") || undefined;
+}
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return earthRadiusKm * c;
 }
 
 function calculateRating(reviews: KostReview[]) {
@@ -66,60 +66,28 @@ async function getCurrentUserId() {
   return user?.id ?? null;
 }
 
-async function enrichKostRows(
-  rows: KostRow[],
-  userId: string | null
-): Promise<KostCardData[]> {
+async function enrichKostRows(rows: KostRow[], userId: string | null): Promise<KostCardData[]> {
   if (rows.length === 0) {
     return [];
   }
 
   const supabase = await createClient();
   const kostIds = rows.map((kost) => kost.id);
-  const campusIds = rows
-    .map((kost) => kost.campus_id)
-    .filter((campusId): campusId is string => Boolean(campusId));
+  const campusIds = rows.map((kost) => kost.campus_id).filter((campusId): campusId is string => Boolean(campusId));
 
-  const { data: imagesData } = await supabase
-    .from("kost_images")
-    .select("*")
-    .in("kost_id", kostIds)
-    .order("is_thumbnail", { ascending: false })
-    .order("created_at", { ascending: true });
+  const { data: imagesData } = await supabase.from("kost_images").select("*").in("kost_id", kostIds).order("is_thumbnail", { ascending: false }).order("created_at", { ascending: true });
 
-  const { data: facilityLinksData } = await supabase
-    .from("kost_facilities")
-    .select("kost_id, facility_id")
-    .in("kost_id", kostIds);
+  const { data: facilityLinksData } = await supabase.from("kost_facilities").select("kost_id, facility_id").in("kost_id", kostIds);
 
-  const facilityIds = (facilityLinksData ?? [])
-    .map((link) => link.facility_id)
-    .filter((facilityId, index, array) => array.indexOf(facilityId) === index);
+  const facilityIds = (facilityLinksData ?? []).map((link) => link.facility_id).filter((facilityId, index, array) => array.indexOf(facilityId) === index);
 
-  const { data: facilitiesData } =
-    facilityIds.length > 0
-      ? await supabase.from("facilities").select("*").in("id", facilityIds)
-      : { data: [] as KostFacility[] };
+  const { data: facilitiesData } = facilityIds.length > 0 ? await supabase.from("facilities").select("*").in("id", facilityIds) : { data: [] as KostFacility[] };
 
-  const { data: reviewsData } = await supabase
-    .from("reviews")
-    .select("*")
-    .in("kost_id", kostIds)
-    .eq("is_hidden", false);
+  const { data: reviewsData } = await supabase.from("reviews").select("*").in("kost_id", kostIds).eq("is_hidden", false);
 
-  const { data: campusesData } =
-    campusIds.length > 0
-      ? await supabase.from("campuses").select("*").in("id", campusIds)
-      : { data: [] as KostCampus[] };
+  const { data: campusesData } = campusIds.length > 0 ? await supabase.from("campuses").select("*").in("id", campusIds) : { data: [] as KostCampus[] };
 
-  const { data: favoritesData } =
-    userId && kostIds.length > 0
-      ? await supabase
-          .from("favorites")
-          .select("kost_id")
-          .eq("user_id", userId)
-          .in("kost_id", kostIds)
-      : { data: [] as Pick<Tables<"favorites">, "kost_id">[] };
+  const { data: favoritesData } = userId && kostIds.length > 0 ? await supabase.from("favorites").select("kost_id").eq("user_id", userId).in("kost_id", kostIds) : { data: [] as Pick<Tables<"favorites">, "kost_id">[] };
 
   const images = (imagesData ?? []) as KostImage[];
   const facilityLinks = (facilityLinksData ?? []) as KostFacilityLink[];
@@ -131,17 +99,12 @@ async function enrichKostRows(
   return rows.map((kost) => {
     const kostImages = images.filter((image) => image.kost_id === kost.id);
     const links = facilityLinks.filter((link) => link.kost_id === kost.id);
-    const kostFacilities = links
-      .map((link) => facilities.find((facility) => facility.id === link.facility_id))
-      .filter((facility): facility is KostFacility => Boolean(facility));
+    const kostFacilities = links.map((link) => facilities.find((facility) => facility.id === link.facility_id)).filter((facility): facility is KostFacility => Boolean(facility));
     const kostReviews = reviews.filter((review) => review.kost_id === kost.id);
 
     return {
       ...kost,
-      thumbnail_url:
-        kostImages.find((image) => image.is_thumbnail)?.image_url ??
-        kostImages[0]?.image_url ??
-        null,
+      thumbnail_url: kostImages.find((image) => image.is_thumbnail)?.image_url ?? kostImages[0]?.image_url ?? null,
       images: kostImages,
       facilities: kostFacilities,
       campus: campuses.find((campus) => campus.id === kost.campus_id) ?? null,
@@ -160,13 +123,10 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
   const searchQuery = sanitizeSearchQuery(filters.query);
   const shouldSortByRating = filters.sort === "rating_high";
 
-  let query = supabase
-    .from("kosts")
-    .select("*", { count: "exact" })
-    .eq("is_verified", true);
+  let query = supabase.from("kosts").select("*", { count: "exact" }).eq("is_verified", true);
 
   if (searchQuery) {
-    query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`);
+    query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%,district.ilike.%${searchQuery}%`);
   }
 
   if (filters.minPrice) {
@@ -189,6 +149,23 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
     query = query.eq("campus_id", filters.campusId);
   }
 
+  if (filters.facilityId) {
+    const { data: matchingKosts } = await supabase.from("kost_facilities").select("kost_id").eq("facility_id", filters.facilityId);
+    const matchingIds = (matchingKosts ?? []).map((item) => item.kost_id);
+
+    if (matchingIds.length === 0) {
+      return {
+        data: [],
+        count: 0,
+        page,
+        perPage,
+        pageCount: 1,
+      };
+    }
+
+    query = query.in("id", matchingIds);
+  }
+
   if (filters.status) {
     query = query.eq("status", filters.status);
   }
@@ -201,21 +178,49 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
     query = query.order("created_at", { ascending: false });
   }
 
-  const { data, count } = shouldSortByRating
-    ? await query
-    : await query.range(from, to);
+  const { data, count } = shouldSortByRating ? await query : await query.range(from, to);
 
   const rows = (data ?? []) as KostRow[];
   const userId = await getCurrentUserId();
   let enriched = await enrichKostRows(rows, userId);
 
-  if (shouldSortByRating) {
-    enriched = enriched
-      .sort((first, second) => second.rating.average - first.rating.average)
-      .slice(from, to + 1);
+  if (searchQuery) {
+    const normalizedQuery = searchQuery.toLowerCase();
+    enriched = enriched.filter((kost) => {
+      const haystacks = [kost.name, kost.address, kost.district, kost.campus?.name].filter(Boolean).map((value) => String(value).toLowerCase());
+
+      return haystacks.some((value) => value.includes(normalizedQuery));
+    });
   }
 
-  const totalCount = count ?? enriched.length;
+  if (filters.sort === "rating_high") {
+    enriched = enriched.sort((first, second) => second.rating.average - first.rating.average);
+  } else if (filters.sort === "nearby") {
+    enriched = enriched.sort((first, second) => {
+      const firstDistance =
+        first.latitude != null && first.longitude != null && first.campus?.latitude != null && first.campus?.longitude != null
+          ? calculateDistance(first.latitude, first.longitude, first.campus.latitude, first.campus.longitude)
+          : Number.POSITIVE_INFINITY;
+      const secondDistance =
+        second.latitude != null && second.longitude != null && second.campus?.latitude != null && second.campus?.longitude != null
+          ? calculateDistance(second.latitude, second.longitude, second.campus.latitude, second.campus.longitude)
+          : Number.POSITIVE_INFINITY;
+
+      return firstDistance - secondDistance;
+    });
+  } else if (filters.sort === "name_asc") {
+    enriched = enriched.sort((first, second) => first.name.localeCompare(second.name));
+  }
+
+  const totalCount = enriched.length;
+
+  if (filters.sort === "rating_high" || filters.sort === "nearby") {
+    enriched = enriched.slice(from, to + 1);
+  }
+
+  if (filters.sort === "latest" || !filters.sort) {
+    enriched = enriched.sort((first, second) => new Date(second.created_at ?? 0).getTime() - new Date(first.created_at ?? 0).getTime());
+  }
 
   return {
     data: enriched,
@@ -232,37 +237,50 @@ export async function searchKosts(filters: KostFilters = {}) {
 
 export async function getFeaturedKosts(limit = FEATURED_LIMIT) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("kosts")
-    .select("*")
-    .eq("featured", true)
-    .eq("is_verified", true)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { data } = await supabase.from("kosts").select("*").eq("featured", true).eq("is_verified", true).order("created_at", { ascending: false }).limit(limit);
 
   return enrichKostRows((data ?? []) as KostRow[], await getCurrentUserId());
 }
 
 export async function getLatestKosts(limit = LATEST_LIMIT) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("kosts")
-    .select("*")
-    .eq("is_verified", true)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { data } = await supabase.from("kosts").select("*").eq("is_verified", true).order("created_at", { ascending: false }).limit(limit);
 
   return enrichKostRows((data ?? []) as KostRow[], await getCurrentUserId());
 }
 
+export async function getNearbyKosts(limit = 6) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("kosts")
+    .select("*, campuses(*)")
+    .eq("is_verified", true)
+    .not("campus_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit * 3);
+
+  const rows = (data ?? []) as Array<KostRow & { campuses?: { latitude: number | null; longitude: number | null } | null }>;
+  const enriched = await enrichKostRows(rows as KostRow[], await getCurrentUserId());
+
+  enriched.sort((first, second) => {
+    const firstDistance =
+      first.latitude != null && first.longitude != null && first.campus?.latitude != null && first.campus?.longitude != null
+        ? calculateDistance(first.latitude, first.longitude, first.campus.latitude, first.campus.longitude)
+        : Number.POSITIVE_INFINITY;
+    const secondDistance =
+      second.latitude != null && second.longitude != null && second.campus?.latitude != null && second.campus?.longitude != null
+        ? calculateDistance(second.latitude, second.longitude, second.campus.latitude, second.campus.longitude)
+        : Number.POSITIVE_INFINITY;
+
+    return firstDistance - secondDistance;
+  });
+
+  return enriched.slice(0, limit);
+}
+
 export async function getKostBySlug(slug: string): Promise<KostDetailData | null> {
   const supabase = await createClient();
-  const { data: kost } = await supabase
-    .from("kosts")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_verified", true)
-    .maybeSingle();
+  const { data: kost } = await supabase.from("kosts").select("*").eq("slug", slug).eq("is_verified", true).maybeSingle();
 
   if (!kost) {
     return null;
@@ -274,25 +292,12 @@ export async function getKostBySlug(slug: string): Promise<KostDetailData | null
     return null;
   }
 
-  const { data: reviewsData } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("kost_id", kost.id)
-    .eq("is_hidden", false)
-    .order("created_at", { ascending: false });
+  const { data: reviewsData } = await supabase.from("reviews").select("*").eq("kost_id", kost.id).eq("is_hidden", false).order("created_at", { ascending: false });
 
   const reviews = (reviewsData ?? []) as KostReview[];
-  const reviewerIds = reviews
-    .map((review) => review.user_id)
-    .filter((userId, index, array) => array.indexOf(userId) === index);
+  const reviewerIds = reviews.map((review) => review.user_id).filter((userId, index, array) => array.indexOf(userId) === index);
 
-  const { data: profilesData } =
-    reviewerIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url")
-          .in("id", reviewerIds)
-      : { data: [] as ProfilePreview[] };
+  const { data: profilesData } = reviewerIds.length > 0 ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", reviewerIds) : { data: [] as ProfilePreview[] };
 
   const profiles = (profilesData ?? []) as ProfilePreview[];
 
@@ -306,21 +311,27 @@ export async function getKostBySlug(slug: string): Promise<KostDetailData | null
     };
   });
 
+  const userId = await getCurrentUserId();
+  const { data: userReview } = userId ? await supabase.from("reviews").select("id, rating, comment, created_at").eq("kost_id", kost.id).eq("user_id", userId).eq("is_hidden", false).maybeSingle() : { data: null };
+
+  const { data: ownerProfile } = await supabase.from("profiles").select("id, full_name, avatar_url, phone").eq("id", kost.owner_id).maybeSingle();
+
   return {
     ...enriched,
     reviews: detailedReviews,
+    user_review: userReview ?? null,
+    owner_name: ownerProfile?.full_name ?? null,
+    owner_avatar_url: ownerProfile?.avatar_url ?? null,
+    owner_phone: ownerProfile?.phone ?? null,
   };
 }
 
 export async function getKostFilterOptions(): Promise<KostFilterOptions> {
   const supabase = await createClient();
-  const [{ data: campuses }, { data: kosts }] = await Promise.all([
+  const [{ data: campuses }, { data: kosts }, { data: facilities }] = await Promise.all([
     supabase.from("campuses").select("id, name").order("name", { ascending: true }),
-    supabase
-      .from("kosts")
-      .select("district")
-      .eq("is_verified", true)
-      .not("district", "is", null),
+    supabase.from("kosts").select("district").eq("is_verified", true).not("district", "is", null),
+    supabase.from("facilities").select("id, name").order("name", { ascending: true }),
   ]);
 
   const districts = (kosts ?? [])
@@ -332,28 +343,16 @@ export async function getKostFilterOptions(): Promise<KostFilterOptions> {
   return {
     campuses: campuses ?? [],
     districts,
+    facilities: facilities ?? [],
   };
 }
 
 export async function getLandingStats(): Promise<LandingStats> {
   const supabase = await createClient();
-  const [kosts, owners, users, reviews] = await Promise.all([
-    supabase.from("kosts").select("id", { count: "exact", head: true }),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "owner"),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "user"),
-    supabase.from("reviews").select("id", { count: "exact", head: true }),
-  ]);
+  const [kosts, campuses] = await Promise.all([supabase.from("kosts").select("id", { count: "exact", head: true }).eq("is_verified", true), supabase.from("campuses").select("id", { count: "exact", head: true })]);
 
   return {
     totalKosts: kosts.count ?? 0,
-    totalOwners: owners.count ?? 0,
-    totalUsers: users.count ?? 0,
-    totalReviews: reviews.count ?? 0,
+    totalCampuses: campuses.count ?? 0,
   };
 }

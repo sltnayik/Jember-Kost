@@ -9,6 +9,9 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { getCurrentProfile, getCurrentUser } from "@/services/auth";
 import "leaflet/dist/leaflet.css";
 
+const SITE_NAME = "JemberKost";
+const SITE_DESCRIPTION = "Platform pencarian dan pengelolaan kos modern di Jember.";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -20,8 +23,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JemberKost",
-  description: "Platform pencarian dan pengelolaan kos di Jember.",
+  title: {
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: ["kos jember", "sewa kost jember", "tempat tinggal mahasiswa jember"],
+  icons: {
+    icon: [{ url: "/favicon.ico" }, { url: "/favicon.ico.png", rel: "icon" }],
+    shortcut: [{ url: "/favicon.ico" }, { url: "/favicon.ico.png", rel: "icon" }],
+    apple: [{ url: "/logo.png" }],
+  },
+  openGraph: {
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default async function RootLayout({

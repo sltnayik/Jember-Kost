@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Building2, LayoutDashboard, LogOut, Users } from "lucide-react";
 
 import { logout } from "@/actions/auth/logout";
+import { BrandMark } from "@/components/shared/brand-mark";
 import { Button } from "@/components/ui/button";
 
 const menus = [
@@ -31,8 +32,9 @@ export function AdminSidebar() {
   return (
     <aside className="sticky top-24 h-fit rounded-2xl border bg-card p-4 shadow-sm">
       <div className="mb-6 px-3">
+        <BrandMark className="mb-3" />
         <p className="text-lg font-semibold text-[#16A34A]">Admin</p>
-        <p className="text-sm text-muted-foreground">JemberKost</p>
+        <p className="text-sm text-muted-foreground">Panel pengelolaan</p>
       </div>
 
       <nav className="space-y-2">
@@ -41,13 +43,7 @@ export function AdminSidebar() {
           const active = pathname === menu.href;
 
           return (
-            <Link
-              key={menu.href}
-              href={menu.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-muted ${
-                active ? "bg-[#16A34A] text-white hover:bg-[#16A34A]" : ""
-              }`}
-            >
+            <Link key={menu.href} href={menu.href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-muted ${active ? "bg-[#16A34A] text-white hover:bg-[#16A34A]" : ""}`}>
               <Icon className="h-4 w-4" />
               {menu.title}
             </Link>

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, LogIn, LogOut, MapPinned, Menu, Sparkles, UserPlus, UserRound } from "lucide-react";
+import { LayoutDashboard, LogIn, LogOut, MapPinned, Menu, UserPlus, UserRound } from "lucide-react";
 
 import { logout } from "@/actions/auth/logout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { BrandMark } from "@/components/shared/brand-mark";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/types/auth";
@@ -36,14 +37,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 shadow-sm shadow-black/5 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex shrink-0 items-center gap-2 text-lg font-semibold text-foreground">
-          <span className="inline-flex size-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
-            <Sparkles className="size-4" />
-          </span>
-          <span>
-            Jember<span className="text-primary">Kost</span>
-          </span>
-        </Link>
+        <BrandMark className="text-lg font-semibold text-foreground" />
 
         <nav className="hidden items-center gap-1 lg:flex">
           <Button variant="ghost" asChild className="rounded-2xl text-sm font-medium text-muted-foreground hover:text-foreground">

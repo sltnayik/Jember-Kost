@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, MapPinned, Search } from "lucide-react";
+import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,31 +43,16 @@ export default function HeroSection() {
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-4 py-2 shadow-sm shadow-black/5">
                 <Search className="size-4 text-amber-500" />
-                16 Kampus Didukung
+                15 Kampus Didukung
               </div>
             </div>
           </div>
 
           <div className="relative">
             <div className="absolute -inset-4 rounded-[2rem] bg-primary/10 blur-3xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-background p-4 shadow-md shadow-black/10 sm:p-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-muted/60 p-4">
-                  <div className="h-56 rounded-2xl bg-[linear-gradient(135deg,rgba(22,163,74,0.20),rgba(15,23,42,0.10)),linear-gradient(180deg,rgba(255,255,255,0.8),rgba(255,255,255,0.2))] dark:bg-[linear-gradient(135deg,rgba(22,163,74,0.18),rgba(255,255,255,0.06)),linear-gradient(180deg,rgba(15,23,42,0.8),rgba(15,23,42,0.45))]" />
-                </div>
-                <div className="grid gap-4">
-                  <div className="rounded-3xl border border-border/70 bg-muted/30 p-4 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Rekomendasi populer</p>
-                    <p className="mt-2 text-xl font-semibold text-foreground">Kos dekat kampus</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Tampilan kartu yang bersih untuk memudahkan eksplorasi harga, fasilitas, dan lokasi.</p>
-                  </div>
-                  <div className="rounded-3xl border border-border/70 bg-primary/10 p-4 shadow-sm">
-                    <p className="text-sm text-primary">Quick insight</p>
-                    <p className="mt-2 text-xl font-semibold text-foreground">Lebih cepat, lebih jelas</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Interface dibuat ringan dan nyaman di mobile maupun desktop.</p>
-                  </div>
-                </div>
-              </div>
+
+            <div className="rounded-2xl overflow-hidden border shadow-sm">
+              <Image src="/images/dashboard-preview.png" alt="Dashboard Preview" width={900} height={600} priority className="w-full h-auto object-cover" />
             </div>
           </div>
         </div>

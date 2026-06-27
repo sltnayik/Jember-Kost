@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Mail, MessageCircle, Sparkles } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
+
+import { BrandMark } from "@/components/shared/brand-mark";
 
 export function Footer() {
   return (
@@ -7,12 +9,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4 lg:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold text-foreground">
-              <span className="inline-flex size-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
-                <Sparkles className="size-4" />
-              </span>
-              JemberKost
-            </Link>
+            <BrandMark className="text-lg font-semibold text-foreground" />
             <p className="max-w-sm text-sm leading-6 text-muted-foreground">Platform pencarian kos modern untuk mahasiswa dan masyarakat di Jember, dengan pengalaman yang bersih dan responsif.</p>
           </div>
 

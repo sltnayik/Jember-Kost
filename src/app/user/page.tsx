@@ -3,6 +3,7 @@ import { Heart, MessageSquareQuote, Search, Sparkles, UserRound } from "lucide-r
 
 import { ProfileCompletenessBanner } from "@/components/auth/profile-completeness-banner";
 import KostCard from "@/components/cards/kost-card";
+import { BrandMark } from "@/components/shared/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getLatestKosts } from "@/data/kosts";
@@ -23,7 +24,10 @@ export default async function UserDashboardPage() {
       <ProfileCompletenessBanner profile={profile} />
 
       <div className="rounded-[2rem] border border-border/70 bg-background p-6 shadow-sm shadow-black/5 sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">Dashboard user</p>
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+          <BrandMark className="text-sm" imageClassName="size-8 rounded-xl" showText={false} />
+          Dashboard user
+        </div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Halo, {profile?.full_name ?? "pengguna"}</h1>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground">Pantau favorit, ulasan, dan temukan kos terbaru yang sesuai kebutuhan Anda.</p>
       </div>

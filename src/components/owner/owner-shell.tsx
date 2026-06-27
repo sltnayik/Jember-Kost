@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/shared/brand-mark";
 import OwnerSidebar from "@/components/shared/owner-sidebar";
 
 type OwnerShellProps = {
@@ -15,7 +16,10 @@ export function OwnerShell({ title, description, action, children }: OwnerShellP
         <section className="min-w-0 space-y-6">
           <div className="flex flex-col gap-4 rounded-2xl border border-[#16A34A]/10 bg-white/90 p-5 shadow-sm shadow-slate-950/5 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#16A34A]">Owner</p>
+              <div className="mb-3 flex items-center gap-2">
+                <BrandMark className="text-base" imageClassName="rounded-xl" />
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#16A34A]">Owner</span>
+              </div>
               <h1 className="mt-2 text-2xl font-semibold text-[#0F172A] sm:text-3xl">{title}</h1>
               <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
             </div>

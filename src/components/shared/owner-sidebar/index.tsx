@@ -2,14 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Building2,
-  PlusCircle,
-  Star,
-  User,
-  BarChart3,
-} from "lucide-react";
+import { LayoutDashboard, Building2, PlusCircle, Star, User, BarChart3 } from "lucide-react";
+
+import { BrandMark } from "@/components/shared/brand-mark";
 
 const menus = [
   {
@@ -49,6 +44,9 @@ export default function OwnerSidebar() {
 
   return (
     <aside className="sticky top-24 h-fit rounded-3xl border bg-card p-5 shadow-sm">
+      <div className="mb-4 border-b border-border/70 pb-4">
+        <BrandMark className="text-base" imageClassName="rounded-xl" />
+      </div>
       <div className="space-y-2">
         {menus.map((menu) => {
           const Icon = menu.icon;
@@ -58,11 +56,7 @@ export default function OwnerSidebar() {
               key={menu.href}
               href={menu.href}
               className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition hover:bg-muted
-                ${
-                  pathname === menu.href || (menu.href === "/owner/dashboard" && pathname === "/owner")
-                    ? "bg-green-600 text-white"
-                    : ""
-                }`}
+                ${pathname === menu.href || (menu.href === "/owner/dashboard" && pathname === "/owner") ? "bg-green-600 text-white" : ""}`}
             >
               <Icon className="h-5 w-5" />
 

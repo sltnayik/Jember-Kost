@@ -1,5 +1,6 @@
 import { Building2, Clock3, UserRound, Users } from "lucide-react";
 
+import { BrandMark } from "@/components/shared/brand-mark";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -44,7 +45,13 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[#0F172A]">Dashboard Admin</h1>
+        <div className="mb-4 flex items-center gap-3">
+          <BrandMark className="text-lg" imageClassName="rounded-xl" />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#16A34A]">Admin</p>
+            <h1 className="text-2xl font-semibold text-[#0F172A]">Dashboard Admin</h1>
+          </div>
+        </div>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Pantau pengguna, pemilik kos, dan proses verifikasi JemberKost.</p>
       </div>
 

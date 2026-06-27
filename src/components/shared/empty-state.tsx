@@ -14,6 +14,8 @@ export default function EmptyState({ title, description, icon: Icon = SearchX }:
         <Icon className="size-8" />
       </div>
 
+      <div className="mt-6 flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-primary">JemberKost</div>
+
       <h2 className="mt-6 text-2xl font-semibold text-foreground">{title}</h2>
 
       <p className="mt-3 max-w-md text-sm leading-7 text-muted-foreground">{description}</p>

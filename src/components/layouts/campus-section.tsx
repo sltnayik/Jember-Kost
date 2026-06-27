@@ -1,6 +1,6 @@
 import { GraduationCap } from "lucide-react";
 
-const campuses = ["Universitas Jember", "Politeknik Negeri Jember", "UIN KHAS Jember", "Universitas Muhammadiyah Jember", "Universitas dr. Soebandi", "Institut Teknologi dan Sains Mandala"];
+const campuses = ["Universitas Jember", "Politeknik Negeri Jember", "UIN KHAS Jember", "Universitas Muhammadiyah Jember", "Universitas dr. Soebandi", "Institut Teknologi dan Sains Mandala", "Akademi Pariwisata Muhammadiyah Jember", "Universitas Mochammad Sroedji", "STIA Pembangunan Jember", "Akademi Farmasi Jember", "Universitas Islam Jember", "Universitas Terbuka", "Universitas PGRI Argopuro Jember", "Akademi Kebidanan Jember", "STDI Imam Syafi'i Jember"];
 
 export default function CampusSection() {
   return (
@@ -12,7 +12,7 @@ export default function CampusSection() {
           <p className="mt-4 text-muted-foreground">Kartu kampus didesain lebih modern agar mudah dipindai dan terasa konsisten dengan layout utama.</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3 xl:grid-cols-3">
           {campuses.map((campus) => (
             <div key={campus} className="rounded-[2rem] border border-border/70 bg-background p-6 shadow-sm shadow-black/5 transition-all hover:-translate-y-1 hover:shadow-md">
               <GraduationCap className="mb-5 size-10 rounded-2xl bg-primary/10 p-2.5 text-primary" />

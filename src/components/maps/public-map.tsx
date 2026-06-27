@@ -2,8 +2,9 @@
 
 import "leaflet/dist/leaflet.css";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
+import { useMemo } from "react";
 import L from "leaflet";
 import Link from "next/link";
 import type { KostCardData } from "@/types/kosts";
@@ -24,17 +25,14 @@ const defaultIcon = L.icon({
 
 export default function PublicMap({ kosts }: Props) {
   const center: [number, number] = [-8.172, 113.7];
+  const validKosts = useMemo(() => kosts.filter((kost) => kost.latitude != null && kost.longitude != null), [kosts]);
 
   return (
     <MapContainer center={center} zoom={13} className="h-full w-full">
       <TileLayer attribution="© OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-      {kosts.map((kost) => {
-        if (kost.latitude == null || kost.longitude == null) {
-          return null;
-        }
-
-        const position: [number, number] = [kost.latitude, kost.longitude];
+      {validKosts.map((kost) => {
+        const position: [number, number] = [kost.latitude as number, kost.longitude as number];
 
         return (
           <Marker key={kost.id} position={position} icon={defaultIcon}>

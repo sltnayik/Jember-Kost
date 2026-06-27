@@ -39,7 +39,7 @@ export default function HeroSection() {
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-muted-foreground">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-4 py-2 shadow-sm shadow-black/5">
                 <BadgeCheck className="size-4 text-primary" />
-                1000+ Kos Terdaftar
+                10+ Kos Terdaftar
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-4 py-2 shadow-sm shadow-black/5">
                 <Search className="size-4 text-amber-500" />

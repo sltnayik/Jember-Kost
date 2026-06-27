@@ -121,13 +121,8 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
   const searchQuery = sanitizeSearchQuery(filters.query);
-  const shouldSortByRating = filters.sort === "rating_high";
 
-  let query = supabase.from("kosts").select("*", { count: "exact" }).eq("is_verified", true);
-
-  if (searchQuery) {
-    query = query.or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%,district.ilike.%${searchQuery}%`);
-  }
+  let query = supabase.from("kosts").select("*").eq("is_verified", true);
 
   if (filters.minPrice) {
     query = query.gte("price", filters.minPrice);
@@ -174,12 +169,13 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
     query = query.order("price", { ascending: true });
   } else if (filters.sort === "price_high") {
     query = query.order("price", { ascending: false });
+  } else if (filters.sort === "name_asc") {
+    query = query.order("name", { ascending: true });
   } else {
     query = query.order("created_at", { ascending: false });
   }
 
-  const { data, count } = shouldSortByRating ? await query : await query.range(from, to);
-
+  const { data } = await query;
   const rows = (data ?? []) as KostRow[];
   const userId = await getCurrentUserId();
   let enriched = await enrichKostRows(rows, userId);
@@ -210,20 +206,19 @@ export async function getKosts(filters: KostFilters = {}): Promise<KostListResul
     });
   } else if (filters.sort === "name_asc") {
     enriched = enriched.sort((first, second) => first.name.localeCompare(second.name));
-  }
-
-  const totalCount = enriched.length;
-
-  if (filters.sort === "rating_high" || filters.sort === "nearby") {
-    enriched = enriched.slice(from, to + 1);
-  }
-
-  if (filters.sort === "latest" || !filters.sort) {
+  } else if (filters.sort === "price_low") {
+    enriched = enriched.sort((first, second) => first.price - second.price);
+  } else if (filters.sort === "price_high") {
+    enriched = enriched.sort((first, second) => second.price - first.price);
+  } else {
     enriched = enriched.sort((first, second) => new Date(second.created_at ?? 0).getTime() - new Date(first.created_at ?? 0).getTime());
   }
 
+  const totalCount = enriched.length;
+  const paged = enriched.slice(from, to + 1);
+
   return {
-    data: enriched,
+    data: paged,
     count: totalCount,
     page,
     perPage,
@@ -349,10 +344,38 @@ export async function getKostFilterOptions(): Promise<KostFilterOptions> {
 
 export async function getLandingStats(): Promise<LandingStats> {
   const supabase = await createClient();
-  const [kosts, campuses] = await Promise.all([supabase.from("kosts").select("id", { count: "exact", head: true }).eq("is_verified", true), supabase.from("campuses").select("id", { count: "exact", head: true })]);
+  const [{ data: kostRows }, campusesResult] = await Promise.all([supabase.from("kosts").select("id, room_total, room_available").eq("is_verified", true), supabase.from("campuses").select("id", { count: "exact", head: true })]);
+
+  const totalRooms = (kostRows ?? []).reduce((sum, kost) => sum + Number(kost.room_total ?? 0), 0);
+  const availableRooms = (kostRows ?? []).reduce((sum, kost) => sum + Number(kost.room_available ?? 0), 0);
 
   return {
-    totalKosts: kosts.count ?? 0,
-    totalCampuses: campuses.count ?? 0,
+    totalKosts: kostRows?.length ?? 0,
+    totalCampuses: campusesResult?.count ?? 0,
+    totalRooms,
+    availableRooms,
   };
+}
+
+export async function getCampusKostSummaries() {
+  const supabase = await createClient();
+  const [{ data: campuses }, { data: kosts }] = await Promise.all([
+    supabase.from("campuses").select("id, name").order("name", { ascending: true }),
+    supabase.from("kosts").select("id, name, campus_id").eq("is_verified", true).not("campus_id", "is", null).order("created_at", { ascending: false }),
+  ]);
+
+  const rows = (kosts ?? []) as Array<Pick<KostRow, "id" | "name" | "campus_id">>;
+
+  return (campuses ?? [])
+    .map((campus) => {
+      const campusKosts = rows.filter((kost) => kost.campus_id === campus.id);
+
+      return {
+        id: campus.id,
+        name: campus.name,
+        kostCount: campusKosts.length,
+        latestNames: campusKosts.slice(0, 3).map((kost) => kost.name),
+      };
+    })
+    .filter((campus) => campus.kostCount > 0);
 }

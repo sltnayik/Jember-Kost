@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BrandMark } from "@/components/shared/brand-mark";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/types/auth";
 
@@ -55,8 +54,6 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
-
           {!isAuthenticated ? (
             <>
               <Button variant="ghost" asChild className="hidden rounded-2xl text-sm font-medium md:inline-flex">

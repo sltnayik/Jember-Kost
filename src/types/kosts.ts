@@ -73,4 +73,6 @@ export type KostFilterOptions = {
 export type LandingStats = {
   totalKosts: number;
   totalCampuses: number;
+  totalRooms: number;
+  availableRooms: number;
 };

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Filter, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ interface KostListShellProps {
   initialMinPrice?: string;
   initialMaxPrice?: string;
   initialStatus?: string;
+  initialPage?: number;
+  initialPageCount?: number;
 }
 
 export function KostListShell({
@@ -41,9 +43,12 @@ export function KostListShell({
   initialMinPrice = "",
   initialMaxPrice = "",
   initialStatus = "",
+  initialPage = 1,
+  initialPageCount = 1,
 }: KostListShellProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const hasMounted = useRef(false);
   const [query, setQuery] = useState(initialQuery);
   const [campusId, setCampusId] = useState(initialCampusId);
@@ -54,24 +59,35 @@ export function KostListShell({
   const [minPrice, setMinPrice] = useState(initialMinPrice);
   const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
   const [status, setStatus] = useState(initialStatus);
+  const [page, setPage] = useState(initialPage);
 
   const hasFilters = useMemo(() => Boolean(query || campusId || district || gender || facilityId || minPrice || maxPrice || status), [campusId, district, facilityId, gender, maxPrice, minPrice, query, status]);
 
   const items = initialKosts;
 
-  function applyFilters(event?: React.FormEvent) {
+  function applyFilters(event?: React.FormEvent, nextPage = 1) {
     event?.preventDefault();
 
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.set("page", String(nextPage));
     if (query.trim()) params.set("query", query.trim());
+    else params.delete("query");
     if (campusId) params.set("campusId", campusId);
+    else params.delete("campusId");
     if (district) params.set("district", district);
+    else params.delete("district");
     if (gender) params.set("gender", gender);
+    else params.delete("gender");
     if (facilityId) params.set("facilityId", facilityId);
+    else params.delete("facilityId");
     if (sort && sort !== "latest") params.set("sort", sort);
+    else params.delete("sort");
     if (minPrice) params.set("minPrice", minPrice);
+    else params.delete("minPrice");
     if (maxPrice) params.set("maxPrice", maxPrice);
+    else params.delete("maxPrice");
     if (status) params.set("status", status);
+    else params.delete("status");
 
     const target = params.toString() ? `${pathname}?${params.toString()}` : pathname;
     router.push(target);
@@ -83,12 +99,23 @@ export function KostListShell({
       return;
     }
 
+    setPage(1);
     const timer = window.setTimeout(() => {
-      applyFilters();
+      applyFilters(undefined, 1);
     }, 250);
 
     return () => window.clearTimeout(timer);
   }, [query, campusId, district, gender, facilityId, sort, minPrice, maxPrice, status]);
+
+  useEffect(() => {
+    setPage(initialPage);
+  }, [initialPage]);
+
+  function handlePageChange(nextPage: number) {
+    const safePage = Math.min(Math.max(nextPage, 1), initialPageCount);
+    setPage(safePage);
+    applyFilters(undefined, safePage);
+  }
 
   return (
     <div className="space-y-6">
@@ -146,18 +173,7 @@ export function KostListShell({
                 <SelectItem value="campur">Campur</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={district} onValueChange={setDistrict}>
-              <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-background">
-                <SelectValue placeholder="Kecamatan" />
-              </SelectTrigger>
-              <SelectContent>
-                {filterOptions.districts.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input value={district} onChange={(event) => setDistrict(event.target.value)} placeholder="Kecamatan" className="h-11 rounded-2xl border-border/70 bg-background" />
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-background">
                 <SelectValue placeholder="Status kamar" />
@@ -200,11 +216,29 @@ export function KostListShell({
       {items.length === 0 ? (
         <EmptyState title="Belum ada kos yang cocok" description="Coba ubah kata kunci atau filter untuk melihat hasil lain." />
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((kost) => (
-            <KostCard key={kost.id} kost={kost} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((kost) => (
+              <KostCard key={kost.id} kost={kost} />
+            ))}
+          </div>
+
+          {initialPageCount > 1 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] border border-border/70 bg-background/80 p-4 shadow-sm shadow-black/5">
+              <p className="text-sm text-muted-foreground">
+                Halaman {page} dari {initialPageCount}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => handlePageChange(page - 1)} disabled={page <= 1}>
+                  Sebelumnya
+                </Button>
+                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => handlePageChange(page + 1)} disabled={page >= initialPageCount}>
+                  Selanjutnya
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </>
       )}
     </div>
   );

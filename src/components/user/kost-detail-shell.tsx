@@ -1,9 +1,13 @@
 "use client";
 
+import "leaflet/dist/leaflet.css";
+
 import Image from "next/image";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { BadgeCheck, CalendarDays, CheckCircle2, Heart, MapPin, MessageCircle, Share2, Star, Users } from "lucide-react";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { toast } from "sonner";
+import type { LeafletMouseEvent } from "leaflet";
 
 import { toggleFavorite } from "@/actions/favorites";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,12 +21,35 @@ interface KostDetailShellProps {
   kost: KostDetailData;
 }
 
+function LocationMapController({ position, shouldFocus }: { position: [number, number]; shouldFocus: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!shouldFocus) {
+      return;
+    }
+
+    map.flyTo(position, 15, { duration: 1 });
+  }, [map, position, shouldFocus]);
+
+  return null;
+}
+
 export function KostDetailShell({ kost }: KostDetailShellProps) {
   const [selectedImage, setSelectedImage] = useState(kost.thumbnail_url ?? kost.images[0]?.image_url ?? "");
   const [isPending, startTransition] = useTransition();
+  const [focusLocation, setFocusLocation] = useState(false);
+  const markerRef = useRef<any>(null);
   const whatsapp = useMemo(() => normalizeWhatsappNumber(kost.whatsapp), [kost.whatsapp]);
 
   const imageList = kost.images.length > 0 ? kost.images : [{ image_url: kost.thumbnail_url ?? "", id: kost.id }];
+  const locationPosition = useMemo<[number, number] | null>(() => {
+    if (kost.latitude == null || kost.longitude == null) {
+      return null;
+    }
+
+    return [kost.latitude, kost.longitude];
+  }, [kost.latitude, kost.longitude]);
 
   function handleSelectImage(index: number) {
     const image = imageList[index];
@@ -52,6 +79,11 @@ export function KostDetailShell({ kost }: KostDetailShellProps) {
       }
       toast.success(result.isFavorited ? "Ditambahkan ke favorit." : "Dihapus dari favorit.");
     });
+  }
+
+  function handleViewLocation() {
+    setFocusLocation(true);
+    document.getElementById("kost-location-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function handleShare(option: "copy" | "whatsapp") {
@@ -152,6 +184,11 @@ export function KostDetailShell({ kost }: KostDetailShellProps) {
                   HUBUNGI PEMILIK
                 </a>
               ) : null}
+
+              <Button type="button" variant="outline" className="w-full rounded-2xl border-border/70 bg-background" onClick={handleViewLocation}>
+                <MapPin className="mr-2 size-4" />
+                Lihat Lokasi
+              </Button>
             </CardContent>
           </Card>
 
@@ -216,13 +253,36 @@ export function KostDetailShell({ kost }: KostDetailShellProps) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <Card className="rounded-[2rem] border border-border/70 bg-background shadow-sm shadow-black/5">
+        <Card id="kost-location-map" className="rounded-[2rem] border border-border/70 bg-background shadow-sm shadow-black/5">
           <CardHeader>
             <CardTitle>Lokasi & kampus terdekat</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="overflow-hidden rounded-[1.4rem] border border-border/70">
-              <div className="aspect-video bg-muted" />
+              {locationPosition ? (
+                <MapContainer center={locationPosition} zoom={15} scrollWheelZoom={false} className="h-[320px] w-full">
+                  <TileLayer attribution="© OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <LocationMapController position={locationPosition} shouldFocus={focusLocation} />
+                  <Marker
+                    position={locationPosition}
+                    ref={(marker) => {
+                      markerRef.current = marker;
+                    }}
+                    eventHandlers={{
+                      click: () => setFocusLocation(false),
+                    }}
+                  >
+                    <Popup>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-foreground">{kost.name}</p>
+                        <p className="text-sm text-muted-foreground">{kost.address}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              ) : (
+                <div className="flex h-[320px] items-center justify-center bg-muted text-sm text-muted-foreground">Lokasi kos belum tersedia.</div>
+              )}
             </div>
             <div className="text-sm text-muted-foreground">
               <p className="font-semibold text-foreground">{kost.address}</p>

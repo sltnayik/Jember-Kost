@@ -12,6 +12,7 @@ interface KostPageProps {
     minPrice?: string;
     maxPrice?: string;
     status?: string;
+    page?: string;
   }>;
 }
 
@@ -28,6 +29,7 @@ export default async function KostPage({ searchParams }: KostPageProps) {
       minPrice: params.minPrice ? Number(params.minPrice) : undefined,
       maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
       status: params.status as "available" | "full" | undefined,
+      page: params.page ? Number(params.page) : 1,
     }),
     getKostFilterOptions(),
   ]);
@@ -47,6 +49,8 @@ export default async function KostPage({ searchParams }: KostPageProps) {
         initialMinPrice={params.minPrice ?? ""}
         initialMaxPrice={params.maxPrice ?? ""}
         initialStatus={params.status ?? ""}
+        initialPage={params.page ? Number(params.page) : 1}
+        initialPageCount={result.pageCount}
       />
     </main>
   );

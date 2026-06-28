@@ -11,7 +11,7 @@ export default async function OwnerKostPhotosPage({ params }: Props) {
   const kost = await getOwnerKostDetail(id);
 
   return (
-    <OwnerShell title="Kelola Foto" description="Tambah foto, preview, hapus foto, dan ubah thumbnail kos.">
+    <OwnerShell title="Kelola Foto" description="Tambah foto, preview, hapus foto, dan ubah thumbnail kos." backButton>
       <PhotosManager kost={kost} />
     </OwnerShell>
   );

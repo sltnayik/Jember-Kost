@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, MessageSquareQuote, Star } from "lucide-reac
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { UserShell } from "@/components/user/user-shell";
 import EmptyState from "@/components/shared/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/services/auth";
@@ -29,13 +30,7 @@ export default async function UserReviewsPage({ searchParams }: UserReviewsPageP
   const pagedReviews = (reviews ?? []).slice((currentPage - 1) * perPage, currentPage * perPage);
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">Review</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Review yang pernah Anda kirim</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Pantau ulasan yang telah Anda beri untuk membantu pengguna lain.</p>
-      </div>
-
+    <UserShell title="Review yang pernah Anda kirim" description="Pantau ulasan yang telah Anda beri untuk membantu pengguna lain.">
       {(reviews?.length ?? 0) === 0 ? (
         <EmptyState title="Belum ada review" description="Berikan ulasan untuk kos yang pernah Anda tinggali agar membantu calon penghuni lain." icon={MessageSquareQuote} />
       ) : (
@@ -80,6 +75,6 @@ export default async function UserReviewsPage({ searchParams }: UserReviewsPageP
           </div>
         </>
       )}
-    </main>
+    </UserShell>
   );
 }

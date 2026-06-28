@@ -12,6 +12,7 @@ type KostImage = Pick<Tables<"kost_images">, "id" | "image_url" | "is_thumbnail"
 type Facility = Pick<Tables<"facilities">, "id" | "name" | "icon">;
 type Campus = Pick<Tables<"campuses">, "id" | "name" | "address" | "latitude" | "longitude">;
 type VerificationRequest = Pick<Tables<"verification_requests">, "status" | "notes" | "created_at">;
+type ReviewerProfile = Pick<Tables<"profiles">, "full_name" | "avatar_url">;
 
 export type OwnerKostListItem = Pick<
   Tables<"kosts">,
@@ -40,6 +41,11 @@ export type OwnerDashboardStats = {
 export type OwnerDashboardData = {
   stats: OwnerDashboardStats;
   latestKosts: OwnerKostListItem[];
+};
+
+export type OwnerReview = Pick<Tables<"reviews">, "id" | "rating" | "comment" | "created_at" | "is_hidden"> & {
+  kost: Pick<Tables<"kosts">, "id" | "name">;
+  reviewer: ReviewerProfile | null;
 };
 
 type FacilityRelation =
@@ -71,6 +77,19 @@ type CampusRelation =
       longitude: number | null;
     }
   | null;
+
+type KostReviewRelation =
+  | {
+      id: string;
+      name: string;
+    }[]
+  | {
+      id: string;
+      name: string;
+    }
+  | null;
+
+type ReviewerRelation = ReviewerProfile[] | ReviewerProfile | null;
 
 function firstRelation<T>(value: T[] | T | null): T | null {
   if (Array.isArray(value)) {
@@ -231,4 +250,51 @@ export async function getOwnerFacilities(kostId: string) {
     facilities: (facilities ?? []) as Facility[],
     selectedFacilityIds: new Set(kost.facilities.map((facility) => facility.id)),
   };
+}
+
+export async function getFacilities(): Promise<Facility[]> {
+  const supabase = await createClient();
+  const { data: facilities, error } = await supabase.from("facilities").select("id, name, icon").order("name");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (facilities ?? []) as Facility[];
+}
+
+export async function getOwnerReviews(): Promise<OwnerReview[]> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id, rating, comment, created_at, is_hidden, kosts!inner(id, name, owner_id), profiles(full_name, avatar_url)")
+    .eq("kosts.owner_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((review) => {
+    const kost = firstRelation(review.kosts as KostReviewRelation);
+
+    return {
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      created_at: review.created_at,
+      is_hidden: review.is_hidden,
+      kost: {
+        id: kost?.id ?? "",
+        name: kost?.name ?? "Kos",
+      },
+      reviewer: firstRelation(review.profiles as ReviewerRelation),
+    };
+  });
 }

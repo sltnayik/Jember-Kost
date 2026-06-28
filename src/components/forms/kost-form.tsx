@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { createKostSchema, type CreateKostInput } from "@/validations/kost";
 
@@ -30,6 +31,12 @@ type SelectedImage = {
   id: string;
   file: File;
   previewUrl: string;
+};
+
+type Facility = {
+  id: string;
+  name: string;
+  icon: string | null;
 };
 
 function getFileExtension(file: File) {
@@ -55,13 +62,14 @@ function withActionTimeout<T>(promise: Promise<T>, timeoutMs: number, fallbackMe
   });
 }
 
-export default function KostForm() {
+export default function KostForm({ facilities = [] }: { facilities?: Facility[] }) {
   const router = useRouter();
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [selectedFacilityIds, setSelectedFacilityIds] = useState<Set<string>>(new Set());
   const [thumbnailId, setThumbnailId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const selectedImagesRef = useRef<SelectedImage[]>([]);
@@ -174,6 +182,20 @@ export default function KostForm() {
     });
   }
 
+  function toggleFacility(facilityId: string, checked: boolean) {
+    setSelectedFacilityIds((current) => {
+      const next = new Set(current);
+
+      if (checked) {
+        next.add(facilityId);
+      } else {
+        next.delete(facilityId);
+      }
+
+      return next;
+    });
+  }
+
   async function onSubmit(values: CreateKostInput) {
     setFormError(null);
 
@@ -214,6 +236,7 @@ export default function KostForm() {
       formData.set("latitude", latitude);
       formData.set("longitude", longitude);
       formData.set("thumbnail_index", String(thumbnailIndex >= 0 ? thumbnailIndex : 0));
+      selectedFacilityIds.forEach((facilityId) => formData.append("facility_ids", facilityId));
 
       console.log("CLIENT IMAGE SUBMIT", {
         selectedImageCount: selectedImages.length,
@@ -418,6 +441,40 @@ export default function KostForm() {
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white p-4">
+              <div className="mb-4">
+                <p className="font-medium text-[#0F172A]">Fasilitas</p>
+                <p className="mt-1 text-sm text-muted-foreground">Pilih fasilitas yang tersedia di kos.</p>
+              </div>
+
+              {facilities.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {facilities.map((facility) => {
+                    const checked = selectedFacilityIds.has(facility.id);
+
+                    return (
+                      <label
+                        key={facility.id}
+                        htmlFor={`facility-${facility.id}`}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border bg-white p-4 shadow-sm transition hover:border-[#16A34A]/40 hover:bg-green-50/50"
+                      >
+                        <Checkbox
+                          id={`facility-${facility.id}`}
+                          name="facility_ids"
+                          value={facility.id}
+                          checked={checked}
+                          onCheckedChange={(value) => toggleFacility(facility.id, value === true)}
+                        />
+                        <span className="text-sm font-medium text-[#0F172A]">{facility.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Belum ada fasilitas tersedia.</p>
+              )}
             </div>
 
             <div className="rounded-2xl border border-border/70 bg-white p-4">

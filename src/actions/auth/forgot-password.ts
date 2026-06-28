@@ -17,14 +17,13 @@ export async function forgotPassword(input: EmailInput): Promise<AuthActionResul
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: siteUrl
-      ? `${siteUrl}/auth/callback?next=/auth/reset-password`
-      : undefined,
+    redirectTo: siteUrl ? `${siteUrl}/auth/callback?next=/auth/reset-password` : undefined,
   });
 
   if (error) {
     return {
-      error: "Email reset password belum dapat dikirim. Coba beberapa saat lagi.",
+      // Forward original Supabase error message to the client for visibility
+      error: error.message ?? "Email reset password belum dapat dikirim. Coba beberapa saat lagi.",
     };
   }
 

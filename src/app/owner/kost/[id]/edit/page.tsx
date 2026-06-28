@@ -11,7 +11,7 @@ export default async function EditKostPage({ params }: Props) {
   const kost = await getOwnerKostDetail(id);
 
   return (
-    <OwnerShell title="Edit Kos" description="Perbarui informasi kos, lokasi, harga, rules, WhatsApp, gender, dan jumlah kamar.">
+    <OwnerShell title="Edit Kos" description="Perbarui informasi kos, lokasi, harga, rules, WhatsApp, gender, dan jumlah kamar." backButton>
       <EditKostForm kost={kost} />
     </OwnerShell>
   );

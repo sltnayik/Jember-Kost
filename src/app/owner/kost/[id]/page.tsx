@@ -41,6 +41,7 @@ export default async function OwnerKostDetailPage({ params }: Props) {
     <OwnerShell
       title={kost.name}
       description="Detail lengkap kos, status, lokasi, foto, dan fasilitas."
+      backButton
       action={
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" className="h-10 rounded-xl">

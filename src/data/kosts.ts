@@ -275,7 +275,7 @@ export async function getNearbyKosts(limit = 6) {
 
 export async function getKostBySlug(slug: string): Promise<KostDetailData | null> {
   const supabase = await createClient();
-  const { data: kost } = await supabase.from("kosts").select("*").eq("slug", slug).eq("is_verified", true).maybeSingle();
+  const { data: kost } = await supabase.from("kosts").select("*").eq("slug", slug).maybeSingle();
 
   if (!kost) {
     return null;

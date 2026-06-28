@@ -1,6 +1,9 @@
 import KostForm from "@/components/forms/kost-form";
+import { getFacilities } from "@/services/owner.service";
 
-export default function AddKostPage() {
+export default async function AddKostPage() {
+  const facilities = await getFacilities();
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <div className="space-y-2">
@@ -9,7 +12,7 @@ export default function AddKostPage() {
         <p className="max-w-2xl text-sm text-muted-foreground">Isi detail kos dengan lengkap dan pilih lokasi di peta agar calon penghuni bisa menemukan properti Anda dengan mudah.</p>
       </div>
 
-      <KostForm />
+      <KostForm facilities={facilities} />
     </main>
   );
 }

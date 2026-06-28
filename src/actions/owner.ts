@@ -5,13 +5,20 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 const KOST_IMAGES_BUCKET = "kost-images";
-const PROFILE_BUCKET_CANDIDATES = ["avatars", "profile-images", "profiles"];
+const PROFILE_BUCKET = "profile";
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
 type ActionResult = {
   success: boolean;
   message: string;
+  avatarUrl?: string;
+  image?: {
+    id: string;
+    image_url: string;
+    is_thumbnail: boolean | null;
+    created_at: string | null;
+  };
 };
 
 function getFileExtension(file: File) {
@@ -275,16 +282,126 @@ export async function setKostThumbnail(kostId: string, imageId: string): Promise
   return { success: true, message: "Thumbnail berhasil diperbarui." };
 }
 
-export async function updateOwnerProfile(formData: FormData): Promise<ActionResult> {
+export async function updateKostThumbnail(kostId: string, formData: FormData): Promise<ActionResult> {
   const { supabase, userId } = await getUserId();
 
   if (!userId) {
     return { success: false, message: "Anda harus login terlebih dahulu." };
   }
 
-  const fullName = String(formData.get("full_name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
-  const avatar = formData.get("avatar");
+  if (!(await ensureOwnedKost(supabase, kostId, userId))) {
+    return { success: false, message: "Kos tidak ditemukan atau bukan milik Anda." };
+  }
+
+  const thumbnail = formData.get("thumbnail");
+
+  if (!(thumbnail instanceof File) || thumbnail.size === 0) {
+    return { success: false, message: "Pilih foto thumbnail terlebih dahulu." };
+  }
+
+  if (!isValidImage(thumbnail)) {
+    return { success: false, message: "Format thumbnail harus jpg, jpeg, png, atau webp." };
+  }
+
+  const { data: currentThumbnail } = await supabase
+    .from("kost_images")
+    .select("id, image_url")
+    .eq("kost_id", kostId)
+    .eq("is_thumbnail", true)
+    .limit(1)
+    .maybeSingle();
+
+  const extension = getFileExtension(thumbnail);
+  const path = `${userId}/${kostId}/thumbnail-${crypto.randomUUID()}.${extension}`;
+  const upload = await supabase.storage.from(KOST_IMAGES_BUCKET).upload(path, thumbnail, {
+    contentType: thumbnail.type || "application/octet-stream",
+    upsert: false,
+  });
+
+  if (upload.error) {
+    return { success: false, message: upload.error.message };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(KOST_IMAGES_BUCKET).getPublicUrl(path);
+
+  let image:
+    | {
+        id: string;
+        image_url: string;
+        is_thumbnail: boolean | null;
+        created_at: string | null;
+      }
+    | null = null;
+
+  try {
+    if (currentThumbnail) {
+      const { data, error } = await supabase
+        .from("kost_images")
+        .update({ image_url: publicUrl, is_thumbnail: true })
+        .eq("id", currentThumbnail.id)
+        .eq("kost_id", kostId)
+        .select("id, image_url, is_thumbnail, created_at")
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      image = data;
+    } else {
+      await supabase.from("kost_images").update({ is_thumbnail: false }).eq("kost_id", kostId);
+      const { data, error } = await supabase
+        .from("kost_images")
+        .insert({ kost_id: kostId, image_url: publicUrl, is_thumbnail: true })
+        .select("id, image_url, is_thumbnail, created_at")
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      image = data;
+    }
+  } catch (error) {
+    await supabase.storage.from(KOST_IMAGES_BUCKET).remove([path]);
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Gagal memperbarui thumbnail.",
+    };
+  }
+
+  const oldPath = currentThumbnail ? getStoragePathFromPublicUrl(currentThumbnail.image_url, KOST_IMAGES_BUCKET) : null;
+
+  if (oldPath) {
+    await supabase.storage.from(KOST_IMAGES_BUCKET).remove([oldPath]);
+  }
+
+  revalidatePath("/owner/kost");
+  revalidatePath(`/owner/kost/${kostId}`);
+  revalidatePath(`/owner/kost/${kostId}/photos`);
+
+  return { success: true, message: "Thumbnail berhasil diperbarui.", image: image ?? undefined };
+}
+
+type UpdateOwnerProfileInput = {
+  fullName: string;
+  phone: string;
+  avatarUrl?: string | null;
+};
+
+export async function updateOwnerProfile(input: UpdateOwnerProfileInput): Promise<ActionResult> {
+  const { supabase, userId } = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "Anda harus login terlebih dahulu." };
+  }
+
+  const fullName = input.fullName.trim();
+  const phone = input.phone.trim();
+  const avatarUrl = input.avatarUrl?.trim() || null;
 
   if (fullName.length < 3) {
     return { success: false, message: "Nama minimal 3 karakter." };
@@ -301,45 +418,36 @@ export async function updateOwnerProfile(formData: FormData): Promise<ActionResu
     updated_at: new Date().toISOString(),
   };
 
-  if (avatar instanceof File && avatar.size > 0) {
-    if (!isValidImage(avatar)) {
-      return { success: false, message: "Format foto profil harus jpg, jpeg, png, atau webp." };
-    }
-
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucket = PROFILE_BUCKET_CANDIDATES.find((bucketName) => buckets?.some((item) => item.name === bucketName));
-
-    if (!bucket) {
-      return { success: false, message: "Bucket foto profil belum tersedia di Supabase." };
-    }
-
-    const extension = getFileExtension(avatar);
-    const path = `${userId}/${crypto.randomUUID()}.${extension}`;
-    const upload = await supabase.storage.from(bucket).upload(path, avatar, {
-      contentType: avatar.type || "application/octet-stream",
-      upsert: false,
-    });
-
-    if (upload.error) {
-      return { success: false, message: upload.error.message };
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(bucket).getPublicUrl(path);
-
-    updatePayload.avatar_url = publicUrl;
+  if (avatarUrl) {
+    updatePayload.avatar_url = avatarUrl;
   }
 
+  const { data: currentProfile } = await supabase.from("profiles").select("avatar_url").eq("id", userId).maybeSingle();
   const { error } = await supabase.from("profiles").update(updatePayload).eq("id", userId);
 
   if (error) {
+    if (updatePayload.avatar_url) {
+      const newPath = getStoragePathFromPublicUrl(updatePayload.avatar_url, PROFILE_BUCKET);
+
+      if (newPath) {
+        await supabase.storage.from(PROFILE_BUCKET).remove([newPath]);
+      }
+    }
+
     return { success: false, message: error.message };
+  }
+
+  if (updatePayload.avatar_url && currentProfile?.avatar_url) {
+    const oldPath = getStoragePathFromPublicUrl(currentProfile.avatar_url, PROFILE_BUCKET);
+
+    if (oldPath) {
+      await supabase.storage.from(PROFILE_BUCKET).remove([oldPath]);
+    }
   }
 
   revalidatePath("/owner/profile");
   revalidatePath("/owner");
   revalidatePath("/owner/dashboard");
 
-  return { success: true, message: "Profil berhasil diperbarui." };
+  return { success: true, message: "Profil berhasil diperbarui.", avatarUrl: updatePayload.avatar_url };
 }

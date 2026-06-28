@@ -1,14 +1,16 @@
 import { BrandMark } from "@/components/shared/brand-mark";
+import { BackButton } from "@/components/owner/back-button";
 import OwnerSidebar from "@/components/shared/owner-sidebar";
 
 type OwnerShellProps = {
   title: string;
   description: string;
   action?: React.ReactNode;
+  backButton?: boolean;
   children: React.ReactNode;
 };
 
-export function OwnerShell({ title, description, action, children }: OwnerShellProps) {
+export function OwnerShell({ title, description, action, backButton = false, children }: OwnerShellProps) {
   return (
     <main className="container py-8 sm:py-10">
       <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
@@ -23,7 +25,12 @@ export function OwnerShell({ title, description, action, children }: OwnerShellP
               <h1 className="mt-2 text-2xl font-semibold text-[#0F172A] sm:text-3xl">{title}</h1>
               <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
             </div>
-            {action ? <div className="shrink-0">{action}</div> : null}
+            {backButton || action ? (
+              <div className="flex shrink-0 flex-wrap gap-2">
+                {backButton ? <BackButton /> : null}
+                {action}
+              </div>
+            ) : null}
           </div>
           {children}
         </section>

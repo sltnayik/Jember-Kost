@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { DeleteUserButton } from "./delete-user-button";
 import {
   Table,
   TableBody,
@@ -57,6 +58,7 @@ export default async function AdminUsersPage() {
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Tanggal Daftar</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -69,6 +71,11 @@ export default async function AdminUsersPage() {
                   <Badge variant="secondary">{user.role ?? "-"}</Badge>
                 </TableCell>
                 <TableCell>{formatCreatedAt(user.created_at)}</TableCell>
+                <TableCell>
+                  <div className="flex justify-end">
+                    <DeleteUserButton userId={user.id} userName={user.full_name} />
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

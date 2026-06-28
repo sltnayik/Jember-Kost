@@ -25,13 +25,21 @@ type AdminKostRow = {
   description: string | null;
   address: string;
   district: string | null;
+  slug: string;
   price: number;
+  room_total: number | null;
+  room_available: number | null;
+  gender_type: string | null;
   whatsapp: string | null;
   rules: string | null;
   latitude: number | null;
   longitude: number | null;
+  featured: boolean | null;
+  view_count: number | null;
   is_verified: boolean | null;
   status: AdminKostStatus;
+  created_at: string | null;
+  updated_at: string | null;
   campuses: RelationValue<{
     name: string;
     address: string | null;
@@ -46,6 +54,13 @@ type AdminKostRow = {
         id: string;
         image_url: string;
         is_thumbnail: boolean | null;
+      }[]
+    | null;
+  kost_facilities:
+    | {
+        facilities: RelationValue<{
+          name: string;
+        }>;
       }[]
     | null;
 };
@@ -77,6 +92,28 @@ function getStatusVariant(status: AdminKostStatus) {
   return "secondary" as const;
 }
 
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatBoolean(value: boolean | null) {
+  if (value === null) {
+    return "-";
+  }
+
+  return value ? "Ya" : "Tidak";
+}
+
 function DetailItem({
   label,
   value,
@@ -106,16 +143,25 @@ export default async function AdminKostDetailPage(
         description,
         address,
         district,
+        slug,
         price,
+        room_total,
+        room_available,
+        gender_type,
         whatsapp,
         rules,
         latitude,
         longitude,
+        featured,
+        view_count,
         is_verified,
         status,
+        created_at,
+        updated_at,
         campuses(name, address),
         profiles(full_name, email, phone),
-        kost_images(id, image_url, is_thumbnail)
+        kost_images(id, image_url, is_thumbnail),
+        kost_facilities(facilities(name))
       `,
     )
     .eq("id", id)
@@ -141,6 +187,9 @@ export default async function AdminKostDetailPage(
   });
   const statusLabel = kost.status ? statusLabels[kost.status] : "Tidak diketahui";
   const verificationLabel = kost.is_verified ? "Sudah diverifikasi" : "Belum diverifikasi";
+  const facilities = (kost.kost_facilities ?? [])
+    .map((item) => getFirstRelation(item.facilities)?.name)
+    .filter((facility): facility is string => Boolean(facility));
 
   return (
     <div className="space-y-6">
@@ -175,10 +224,20 @@ export default async function AdminKostDetailPage(
             </CardHeader>
             <CardContent className="grid gap-5 md:grid-cols-2">
               <DetailItem label="Nama kos" value={kost.name} />
+              <DetailItem label="Slug" value={kost.slug} />
               <DetailItem label="Harga" value={`${formatRupiah(kost.price)} / bulan`} />
+              <DetailItem label="Tipe kos" value={kost.gender_type ?? "-"} />
+              <DetailItem
+                label="Kamar tersedia"
+                value={`${kost.room_available ?? 0} dari ${kost.room_total ?? 0} kamar`}
+              />
               <DetailItem label="Pemilik kos" value={owner?.full_name ?? "-"} />
               <DetailItem label="Kampus terdekat" value={campus?.name ?? "-"} />
               <DetailItem label="WhatsApp" value={kost.whatsapp ?? "-"} />
+              <DetailItem label="Kos unggulan" value={formatBoolean(kost.featured)} />
+              <DetailItem label="Jumlah dilihat" value={kost.view_count ?? 0} />
+              <DetailItem label="Dibuat pada" value={formatDateTime(kost.created_at)} />
+              <DetailItem label="Diperbarui pada" value={formatDateTime(kost.updated_at)} />
               <DetailItem
                 label="Status verifikasi"
                 value={
@@ -192,6 +251,27 @@ export default async function AdminKostDetailPage(
                   </span>
                 }
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Fasilitas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {facilities.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {facilities.map((facility) => (
+                    <Badge key={facility} variant="secondary">
+                      {facility}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Belum ada fasilitas untuk kos ini.
+                </p>
+              )}
             </CardContent>
           </Card>
 

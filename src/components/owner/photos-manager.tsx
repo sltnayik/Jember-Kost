@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Check, ImagePlus, Loader2, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { addKostPhotos, deleteKostPhoto, setKostThumbnail } from "@/actions/owner";
+import { addKostPhotos, deleteKostPhoto, setKostThumbnail, updateKostThumbnail } from "@/actions/owner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,10 +21,18 @@ import {
 } from "@/components/ui/dialog";
 import type { OwnerKostDetail } from "@/services/owner.service";
 
+type PhotoActionResult = {
+  success: boolean;
+  message: string;
+  image?: OwnerKostDetail["images"][number];
+};
+
 export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const thumbnailRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [images, setImages] = useState(kost.images);
   const [isPending, startTransition] = useTransition();
 
   function handleUpload() {
@@ -48,7 +56,7 @@ export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
     });
   }
 
-  function runPhotoAction(action: () => Promise<{ success: boolean; message: string }>) {
+  function runPhotoAction(action: () => Promise<PhotoActionResult>) {
     startTransition(async () => {
       const result = await action();
 
@@ -58,8 +66,37 @@ export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
       }
 
       toast.success(result.message);
+      if (result.image) {
+        const updatedImage = result.image;
+
+        setImages((currentImages) => {
+          const withoutThumbnail = currentImages.map((image) => ({ ...image, is_thumbnail: false }));
+          const exists = withoutThumbnail.some((image) => image.id === updatedImage.id);
+
+          if (exists) {
+            return withoutThumbnail.map((image) => (image.id === updatedImage.id ? updatedImage : image));
+          }
+
+          return [updatedImage, ...withoutThumbnail];
+        });
+      }
       router.refresh();
     });
+  }
+
+  function handleThumbnailChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("thumbnail", file, file.name);
+
+    runPhotoAction(() => updateKostThumbnail(kost.id, formData));
+
+    event.target.value = "";
   }
 
   return (
@@ -77,6 +114,13 @@ export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
             className="sr-only"
             onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
           />
+          <input
+            ref={thumbnailRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={handleThumbnailChange}
+          />
           <div className="flex flex-col gap-3 rounded-xl border border-dashed bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-medium text-[#0F172A]">{files.length > 0 ? `${files.length} foto siap diunggah` : "Pilih foto kos"}</p>
@@ -91,6 +135,10 @@ export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
                 {isPending ? <Loader2 className="animate-spin" /> : <ImagePlus />}
                 Upload
               </Button>
+              <Button type="button" variant="outline" onClick={() => thumbnailRef.current?.click()} disabled={isPending}>
+                <Star />
+                Ganti thumbnail
+              </Button>
             </div>
           </div>
           {isPending ? <div className="h-2 overflow-hidden rounded-full bg-green-100"><div className="h-full w-2/3 animate-pulse rounded-full bg-[#16A34A]" /></div> : null}
@@ -98,7 +146,7 @@ export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {kost.images.map((image, index) => (
+        {images.map((image, index) => (
           <Card key={image.id} className="rounded-2xl bg-white shadow-sm shadow-slate-950/5">
             <div className="relative aspect-[4/3] overflow-hidden bg-muted">
               <Image src={image.image_url} alt={`${kost.name} foto ${index + 1}`} fill sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
@@ -121,7 +169,7 @@ export function PhotosManager({ kost }: { kost: OwnerKostDetail }) {
         ))}
       </div>
 
-      {kost.images.length === 0 ? (
+      {images.length === 0 ? (
         <Card className="rounded-2xl bg-white p-10 text-center text-sm text-muted-foreground shadow-sm shadow-slate-950/5">Belum ada foto untuk kos ini.</Card>
       ) : null}
     </div>

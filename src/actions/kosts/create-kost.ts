@@ -151,6 +151,7 @@ export async function createKost(formData: FormData) {
     latitude: formData.get("latitude"),
     longitude: formData.get("longitude"),
   });
+  const facilityIds = formData.getAll("facility_ids").filter((value): value is string => typeof value === "string");
 
   const slug = generateSlug(parsed.name);
 
@@ -220,6 +221,8 @@ export async function createKost(formData: FormData) {
     };
   }
 
+  const uploadedPaths: string[] = [];
+
   if (images.length > 0) {
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
 
@@ -230,8 +233,6 @@ export async function createKost(formData: FormData) {
 
     const thumbnailIndexValue = Number(formData.get("thumbnail_index") ?? 0);
     const thumbnailIndex = Number.isInteger(thumbnailIndexValue) && thumbnailIndexValue >= 0 && thumbnailIndexValue < images.length ? thumbnailIndexValue : 0;
-
-    const uploadedPaths: string[] = [];
 
     try {
       const imageRows = [];
@@ -294,6 +295,32 @@ export async function createKost(formData: FormData) {
       return {
         success: false,
         message: `Gagal mengunggah foto kos. ${detailMessage}`,
+      };
+    }
+  }
+
+  if (facilityIds.length > 0) {
+    const { error: facilityError } = await supabase.from("kost_facilities").insert(
+      facilityIds.map((facilityId) => ({
+        kost_id: kost.id,
+        facility_id: facilityId,
+      })),
+    );
+
+    if (facilityError) {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from(KOST_IMAGES_BUCKET).remove(uploadedPaths);
+      }
+
+      const { error: deleteError } = await supabase.from("kosts").delete().eq("id", kost.id);
+
+      if (deleteError) {
+        console.error("ROLLBACK DELETE ERROR", deleteError);
+      }
+
+      return {
+        success: false,
+        message: facilityError.message,
       };
     }
   }

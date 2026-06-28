@@ -3,6 +3,7 @@ import { Heart, MessageSquareQuote, Search, Sparkles, UserRound } from "lucide-r
 
 import { ProfileCompletenessBanner } from "@/components/auth/profile-completeness-banner";
 import KostCard from "@/components/cards/kost-card";
+import { UserShell } from "@/components/user/user-shell";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,17 +21,8 @@ export default async function UserDashboardPage() {
     .eq("user_id", profile?.id ?? "");
 
   return (
-    <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 sm:px-6">
+    <UserShell title={`Halo, ${profile?.full_name ?? "pengguna"}`} description="Pantau favorit, ulasan, dan temukan kos terbaru yang sesuai kebutuhan Anda." backButton={false} homeButton={false}>
       <ProfileCompletenessBanner profile={profile} />
-
-      <div className="rounded-[2rem] border border-border/70 bg-background p-6 shadow-sm shadow-black/5 sm:p-8">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-          <BrandMark className="text-sm" imageClassName="size-8 rounded-xl" showText={false} />
-          Dashboard user
-        </div>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Halo, {profile?.full_name ?? "pengguna"}</h1>
-        <p className="mt-3 max-w-2xl text-sm text-muted-foreground">Pantau favorit, ulasan, dan temukan kos terbaru yang sesuai kebutuhan Anda.</p>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="rounded-[1.6rem] border border-border/70 bg-background shadow-sm shadow-black/5">
@@ -105,6 +97,6 @@ export default async function UserDashboardPage() {
           ))}
         </div>
       </div>
-    </main>
+    </UserShell>
   );
 }

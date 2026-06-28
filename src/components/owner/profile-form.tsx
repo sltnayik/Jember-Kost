@@ -12,24 +12,63 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { removeProfileImage, uploadProfileImage, validateProfileImage } from "@/lib/profile-upload";
 import type { AuthProfile } from "@/types/auth";
 
 export function ProfileForm({ profile }: { profile: AuthProfile }) {
   const router = useRouter();
   const [preview, setPreview] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const fullName = String(formData.get("full_name") ?? "");
+    const phone = String(formData.get("phone") ?? "");
+
     startTransition(async () => {
-      const result = await updateOwnerProfile(formData);
+      let uploadedPath: string | null = null;
+      let nextAvatarUrl: string | null = null;
 
-      if (!result.success) {
-        toast.error(result.message);
-        return;
+      try {
+        if (selectedFile) {
+          const uploaded = await uploadProfileImage(selectedFile);
+          uploadedPath = uploaded.path;
+          nextAvatarUrl = uploaded.publicUrl;
+        }
+
+        const result = await updateOwnerProfile({
+          fullName,
+          phone,
+          avatarUrl: nextAvatarUrl,
+        });
+
+        if (!result.success) {
+          if (uploadedPath) {
+            await removeProfileImage(uploadedPath);
+          }
+
+          toast.error(result.message);
+          return;
+        }
+
+        if (result.avatarUrl) {
+          setAvatarUrl(result.avatarUrl);
+        }
+
+        setSelectedFile(null);
+        setPreview(null);
+        toast.success(result.message);
+        router.refresh();
+      } catch (error) {
+        if (uploadedPath) {
+          await removeProfileImage(uploadedPath);
+        }
+
+        toast.error(error instanceof Error ? error.message : "Gagal memperbarui profil.");
       }
-
-      toast.success(result.message);
-      router.refresh();
     });
   }
 
@@ -46,7 +85,7 @@ export function ProfileForm({ profile }: { profile: AuthProfile }) {
         <CardTitle>Informasi profil</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="grid gap-6">
+        <form onSubmit={handleSubmit} className="grid gap-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             {preview ? (
               <div className="relative size-24 overflow-hidden rounded-2xl border bg-muted">
@@ -54,7 +93,7 @@ export function ProfileForm({ profile }: { profile: AuthProfile }) {
               </div>
             ) : (
               <Avatar className="size-24 rounded-2xl">
-                <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name} />
+                <AvatarImage src={avatarUrl ?? undefined} alt={profile.full_name} />
                 <AvatarFallback className="rounded-2xl bg-green-50 text-lg font-semibold text-[#16A34A]">{initials}</AvatarFallback>
               </Avatar>
             )}
@@ -64,10 +103,28 @@ export function ProfileForm({ profile }: { profile: AuthProfile }) {
                 id="avatar"
                 name="avatar"
                 type="file"
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                accept="image/*"
                 onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  setPreview(file ? URL.createObjectURL(file) : null);
+                  const file = event.target.files?.[0] ?? null;
+
+                  if (!file) {
+                    setSelectedFile(null);
+                    setPreview(null);
+                    return;
+                  }
+
+                  const validationError = validateProfileImage(file);
+
+                  if (validationError) {
+                    toast.error(validationError);
+                    event.target.value = "";
+                    setSelectedFile(null);
+                    setPreview(null);
+                    return;
+                  }
+
+                  setSelectedFile(file);
+                  setPreview(URL.createObjectURL(file));
                 }}
               />
               <p className="text-xs text-muted-foreground">Preview muncul sebelum disimpan. Upload memakai bucket profil yang sudah tersedia.</p>

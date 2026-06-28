@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, HeartOff } from "lucide-react";
 
 import { getCurrentUserFavorites } from "@/data/favorites";
 import { getKosts } from "@/data/kosts";
+import { UserShell } from "@/components/user/user-shell";
 import EmptyState from "@/components/shared/empty-state";
 import KostCard from "@/components/cards/kost-card";
 import { Button } from "@/components/ui/button";
@@ -32,13 +33,7 @@ export default async function UserFavoritesPage({ searchParams }: UserFavoritesP
   const pagedKosts = favoriteKosts.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">Favorit</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Kos favorit Anda</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Daftar kos yang sudah Anda simpan untuk dipertimbangkan nanti.</p>
-      </div>
-
+    <UserShell title="Kos favorit Anda" description="Daftar kos yang sudah Anda simpan untuk dipertimbangkan nanti.">
       {favoriteKosts.length === 0 ? (
         <EmptyState title="Belum ada favorit" description="Simpan kos yang Anda suka untuk melihatnya kembali di sini." icon={HeartOff} />
       ) : (
@@ -67,6 +62,6 @@ export default async function UserFavoritesPage({ searchParams }: UserFavoritesP
           </div>
         </>
       )}
-    </main>
+    </UserShell>
   );
 }

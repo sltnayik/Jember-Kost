@@ -11,7 +11,7 @@ export default async function OwnerKostFacilitiesPage({ params }: Props) {
   const { kost, facilities, selectedFacilityIds } = await getOwnerFacilities(id);
 
   return (
-    <OwnerShell title="Kelola Fasilitas" description={`Pilih fasilitas yang tersedia di ${kost.name}.`}>
+    <OwnerShell title="Kelola Fasilitas" description={`Pilih fasilitas yang tersedia di ${kost.name}.`} backButton>
       <FacilitiesForm kostId={kost.id} facilities={facilities} selectedFacilityIds={[...selectedFacilityIds]} />
     </OwnerShell>
   );

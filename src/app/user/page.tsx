@@ -53,7 +53,7 @@ export default async function UserDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mt-3 mb-3">
         <Button asChild className="h-12 rounded-2xl bg-primary text-primary-foreground">
           <Link href="/kost">
             <Search className="mr-2 size-4" />
